@@ -1,0 +1,17 @@
+{
+    "console": {
+        "enable": true,
+        "level": "FINE"
+    },
+    "files": [{
+        "enable": true,
+        "level": "DEBUG",
+        "filename":"public/logs/app.log",
+        "category": "app",
+        "pattern": "[%D %T] [%C] [%L] (%S) %M",
+        "rotate": true,
+        "maxsize": "100M",
+        "maxlines": "10K",
+        "daily": true
+    }]
+}

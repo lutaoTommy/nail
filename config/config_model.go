@@ -1,0 +1,27 @@
+package config
+
+/*配置文件*/
+type Config struct {
+	Domain   string `json:"domain"`
+	HttpPort int    `json:"http_port"`
+	MysqlUrl string `json:"mysql_url"`
+	Language string `json:"language"`
+	/*OSS 阿里云对象存储*/
+	OssEndpoint        string `json:"oss_endpoint"`
+	OssAccessKeyId     string `json:"oss_access_key_id"`
+	OssAccessKeySecret string `json:"oss_access_key_secret"`
+	OssBucket          string `json:"oss_bucket"`
+	OssDomain          string `json:"oss_domain"` /*访问域名，如 https://fndroid.oss-cn-shanghai.aliyuncs.com */
+	/*邮件（阿里云 DirectMail）*/
+	MailEndpoint        string `json:"mail_endpoint"` /*如 dm.aliyuncs.com */
+	MailAccessKeyId     string `json:"mail_access_key_id"`
+	MailAccessKeySecret string `json:"mail_access_key_secret"`
+	MailAccountName     string `json:"mail_account_name"` /*发信地址，如 register@mail.smartepapersystem.com */
+	/*阿里云图像识别（imagerecog）*/
+	AliAccessKeyId        string `json:"ali_access_key_id"`
+	AliAccessKeySecret    string `json:"ali_access_key_secret"`
+	AliImagerecogEndpoint string `json:"ali_imagerecog_endpoint"` /*如 imagerecog.cn-shanghai.aliyuncs.com */
+	/*微信小程序登录*/
+	WxAppId     string `json:"wx_app_id"`     /*小程序 appid */
+	WxAppSecret string `json:"wx_app_secret"` /*小程序 appsecret */
+}

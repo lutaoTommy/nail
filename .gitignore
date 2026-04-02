@@ -1,0 +1,9 @@
+go.mod
+go.sum
+public
+test/
+.DS_Store
+config.ini
+docs
+www.fnnail.com.key
+www.fnnail.com.pem
