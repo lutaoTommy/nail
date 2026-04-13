@@ -1,21 +1,14 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
-	"image"
-	"io"
-	"nail/config"
 	"nail/language"
 	"nail/parser"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	imagerecog20190930 "github.com/alibabacloud-go/imagerecog-20190930/v2/client"
-	log "github.com/jeanphorn/log4go"
 	"github.com/kataras/iris/v12"
 )
 
@@ -35,8 +28,6 @@ func ColorHandler(color iris.Party) {
 	color.Post("/favorite", addColorFavoriteHandler)
 	color.Post("/favorite/remove", removeColorFavoriteHandler)
 	color.Get("/favorite/list", listColorFavoriteHandler)
-	/*颜色识别*/
-	color.Post("/recognition", colorRecognitionHandler)
 }
 
 /*查询色系*/
@@ -430,107 +421,4 @@ func parseColor(params *Params) ([]ColorParseItem, error) {
 		})
 	}
 	return result, nil
-}
-
-/*图片颜色识别*/
-func colorRecognitionHandler(ctx iris.Context) {
-	var cType string
-	var fileBytes []byte
-	var picture ColorRecog
-	picture.Token = ctx.GetHeader("token")
-	returnData := iris.Map{"result_code": 500}
-	file, info, err := ctx.FormFile("image")
-	if err != nil {
-		err = newError(400, "E_INVALID_PICTURE")
-	} else if c, _, e := image.DecodeConfig(file); e != nil {
-		err = e
-	} else {
-		/*再次读取*/
-		file.Seek(0, 0)
-		defer file.Close()
-		fileBytes, err = io.ReadAll(file)
-		if err != nil {
-			/*do nothing*/
-		} else if picture.Token == "" {
-			err = newError(401, "E_NO_TOKEN")
-		} else if cType = http.DetectContentType(fileBytes); cType != JPEG && cType != PNG {
-			err = newError(400, "E_INVALID_PICTURE")
-		}
-		picture.Width = c.Width
-		picture.Height = c.Height
-	}
-	if err != nil {
-		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
-	} else {
-		picture.Size = strconv.FormatInt(info.Size, 10)
-		picture.Type = strings.Split(cType, "/")[1]
-		data, colors, err := colorRecognition(fileBytes, &picture)
-		if err == nil {
-			returnData["result_code"] = 200
-			returnData["result_msg"] = "success"
-			returnData["data"] = data.ColorTemplateList
-			returnData["recommend"] = colors
-		} else {
-			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
-		}
-	}
-	ctx.JSON(returnData)
-}
-
-/*图片颜色识别*/
-func colorRecognition(imgData []byte, picture *ColorRecog) (data *imagerecog20190930.RecognizeImageColorResponseBodyData, colors []ColorOut, err error) {
-	db := getMysqlConn()
-	var userInfo User
-	err = db.Where("token = ?", picture.Token).First(&userInfo).Error
-	if err != nil {
-		return data, colors, newError(401, "E_NO_TOKEN")
-	}
-	/*解析图片*/
-	var img image.Image
-	img, err = parseImageData(bytes.NewBuffer(imgData))
-	if err != nil {
-		return data, colors, err
-	}
-	/*保存图片*/
-	picture.Id = RandStringBytes(3)
-	name := picture.Id + ".png"
-	path := "public/picture/" + name
-	err = savePngImage(img, path)
-	if err != nil {
-		return data, colors, err
-	}
-	/*保存oss*/
-	err = putOssObject("ai/"+name, path)
-	if err != nil {
-		return data, colors, err
-	}
-	picture.Url = fmt.Sprintf("%s/ai/%s", config.GetOssDomain(), name)
-	data, err = imageRecog(picture.Url)
-	if err != nil {
-		log.LOGGER("app").Debug("颜色识别失败: %s - %v", picture.Id, err)
-		return data, colors, err
-	}
-	log.LOGGER("app").Debug("颜色识别成功: %s - %v", picture.Id, data)
-	var colorList []ColorOut
-	err = db.Table("colors").Find(&colorList).Error
-	if err != nil {
-		return data, colors, err
-	}
-	var ids []string
-	colors = []ColorOut{}
-	colors, err = colorRecommend(colorList, data)
-	if err != nil {
-		return data, colors, err
-	}
-	log.LOGGER("app").Debug("颜色推荐: %s - %v", picture.Id, colors)
-	picture.Time = time.Now().Format("2006-01-02 15:04:05")
-	for _, item := range colors {
-		ids = append(ids, item.Id)
-	}
-	picture.UserId = userInfo.UserId
-	picture.Color = strings.Join(ids, ",")
-	err = db.Create(picture).Error
-	return data, colors, err
 }

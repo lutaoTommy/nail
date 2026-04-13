@@ -39,13 +39,6 @@ func LoadConfig() error {
 	localConfig.MailAccessKeySecret, _ = cfg.GetValue("mail", "mail_access_key_secret")
 	localConfig.MailAccountName, _ = cfg.GetValue("mail", "mail_account_name")
 	localConfig.MailFromAlias, _ = cfg.GetValue("mail", "mail_from_alias")
-	/*阿里云图像识别*/
-	localConfig.AliAccessKeyId, _ = cfg.GetValue("ali", "ali_access_key_id")
-	localConfig.AliAccessKeySecret, _ = cfg.GetValue("ali", "ali_access_key_secret")
-	localConfig.AliImagerecogEndpoint, _ = cfg.GetValue("ali", "ali_imagerecog_endpoint")
-	/*微信小程序*/
-	localConfig.WxAppId, _ = cfg.GetValue("wx", "wx_app_id")
-	localConfig.WxAppSecret, _ = cfg.GetValue("wx", "wx_app_secret")
 	return nil
 }
 
@@ -82,12 +75,3 @@ func GetMailAccessKeyId() string     { return localConfig.MailAccessKeyId }
 func GetMailAccessKeySecret() string { return localConfig.MailAccessKeySecret }
 func GetMailAccountName() string     { return localConfig.MailAccountName }
 func GetMailFromAlias() string       { return localConfig.MailFromAlias }
-
-/*获取阿里云图像识别配置*/
-func GetAliAccessKeyId() string        { return localConfig.AliAccessKeyId }
-func GetAliAccessKeySecret() string    { return localConfig.AliAccessKeySecret }
-func GetAliImagerecogEndpoint() string { return localConfig.AliImagerecogEndpoint }
-
-/*获取微信小程序配置*/
-func GetWxAppId() string     { return localConfig.WxAppId }
-func GetWxAppSecret() string { return localConfig.WxAppSecret }

@@ -64,35 +64,6 @@ type UserOut struct {
 	PostCount    int    `json:"postCount"`
 }
 
-/*微信登陆*/
-type WxLogin struct {
-	Iv    string `json:"iv"`
-	Ip    string `json:"ip"`
-	Code  string `json:"code"`
-	Data  string `json:"data"`
-	Token string `json:"token"`
-}
-
-/*微信返回*/
-type WxCode2SessionResponse struct {
-	OpenID     string `json:"openid"`
-	SessionKey string `json:"session_key"`
-	UnionID    string `json:"unionid,omitempty"`
-	ErrCode    int    `json:"errcode,omitempty"`
-	ErrMsg     string `json:"errmsg,omitempty"`
-}
-
-/*手机号解密*/
-type DecryptDataResponse struct {
-	PhoneNumber     string `json:"phoneNumber"`
-	PurePhoneNumber string `json:"purePhoneNumber"`
-	CountryCode     string `json:"countryCode"`
-	Watermark       struct {
-		AppID     string `json:"appid"`
-		Timestamp int64  `json:"timestamp"`
-	} `json:"watermark"`
-}
-
 /*字段检查*/
 func (user User) checkPhone() error {
 	var err error

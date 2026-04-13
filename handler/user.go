@@ -1,17 +1,10 @@
 package handler
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"time"
 
-	"nail/config"
 	"nail/language"
 
 	"github.com/kataras/iris/v12"
@@ -34,8 +27,6 @@ func UserHandler(user iris.Party) {
 	user.Post("/login", userLoginHandler)
 	/*邮箱登陆*/
 	user.Post("/login/mail", mailLoginHandler)
-	/*微信登陆*/
-	user.Post("/login/wx", wxLoginHandler)
 	/*人员信息*/
 	user.Post("/info/update", updateUserInfoHandler)
 	/*人员信息*/
@@ -475,172 +466,6 @@ func mailLogin(user *User) error {
 	}
 	user.Token = newTk
 	return nil
-}
-
-/*微信登陆*/
-func wxLoginHandler(ctx iris.Context) {
-	var err error
-	var wx WxLogin
-	returnData := iris.Map{"result_code": 500}
-	if err = ctx.ReadJSON(&wx); err != nil {
-		ctx.StatusCode(iris.StatusBadRequest)
-	} else if wx.Iv == "" {
-		err = newError(400, "E_NO_IV")
-	} else if wx.Code == "" {
-		err = newError(400, "E_NO_CODE")
-	} else if wx.Data == "" {
-		err = newError(400, "E_NO_DATA")
-	}
-	// 注意：wx 登录请求包含敏感字段（code、iv、encryptedData），不要直接打印
-	if err != nil {
-		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
-	} else {
-		err = wxLogin(&wx)
-		if err == nil {
-			returnData["result_code"] = 200
-			returnData["result_msg"] = "success"
-			returnData["token"] = wx.Token
-		} else {
-			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
-		}
-	}
-	ctx.JSON(returnData)
-}
-
-/*微信登陆 2025-08-18*/
-func wxLogin(wx *WxLogin) error {
-	result, err := getSessionKey(wx.Code)
-	if err != nil {
-		return err
-	}
-	phone, err := decryptPhoneNumber(wx.Data, wx.Iv, result.SessionKey)
-	if err != nil {
-		return err
-	}
-	/*查询账号*/
-	db := getMysqlConn()
-	var userInfo User
-	now := time.Now().Format("2006-01-02 15:04:05")
-	err = db.Where("phone = ?", phone).First(&userInfo).Error
-	if err == nil {
-		wx.Token = userInfo.Token
-		err = db.Table("users").Where("user_id = ?", userInfo.UserId).Update("login_time", now).Error
-	} else {
-		userInfo.Phone = phone
-		userInfo.OpenID = result.OpenID
-		tk, err := newToken()
-		if err != nil {
-			return err
-		}
-		userInfo.Token = tk
-		userInfo.UserId = RandStringBytes(5)
-		userInfo.LoginTime = now
-		userInfo.RegisterTime = now
-		userInfo.Status = 1 // 与邮箱/手机注册一致，视为已激活
-		wx.Token = userInfo.Token
-		err = db.Create(userInfo).Error
-	}
-	return err
-}
-
-/*获取 session_key，appid/appsecret 从 config.ini [wx] 读取*/
-func getSessionKey(code string) (WxCode2SessionResponse, error) {
-	var result WxCode2SessionResponse
-	url := fmt.Sprintf(
-		"https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
-		config.GetWxAppId(), config.GetWxAppSecret(), code,
-	)
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		return result, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return result, err
-	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return result, err
-	}
-
-	if result.ErrCode != 0 {
-		return result, fmt.Errorf("%d - %s", result.ErrCode, result.ErrMsg)
-	}
-
-	return result, nil
-}
-
-/* 解密手机号。失败常见原因：code 与获取手机号时的 session 不一致（如获取手机号后又调用了 wx.login），导致 session_key 与加密数据不匹配。*/
-func decryptPhoneNumber(encryptedData, iv, sessionKey string) (string, error) {
-	var phone string
-	encryptedData = strings.TrimSpace(encryptedData)
-	iv = strings.TrimSpace(iv)
-	sessionKey = strings.TrimSpace(sessionKey)
-
-	encryptedDataBytes, err := decodeBase64(encryptedData)
-	if err != nil {
-		return phone, err
-	}
-	ivBytes, err := decodeBase64(iv)
-	if err != nil {
-		return phone, err
-	}
-	sessionKeyBytes, err := decodeBase64(sessionKey)
-	if err != nil {
-		return phone, err
-	}
-
-	if len(ivBytes) != aes.BlockSize {
-		return phone, newError(400, "E_INVALID_IV")
-	}
-	if len(sessionKeyBytes) != 16 {
-		return phone, newError(400, "E_INVALID_SESSION_KEY")
-	}
-	if len(encryptedDataBytes) < aes.BlockSize {
-		return phone, newError(400, "E_DATA_TOO_SHORT")
-	}
-	// CBC 模式要求密文长度必须是 blockSize 的整数倍，否则会 panic
-	if len(encryptedDataBytes)%aes.BlockSize != 0 {
-		return phone, newError(400, "E_DECRYPT_FAIL")
-	}
-
-	block, err := aes.NewCipher(sessionKeyBytes)
-	if err != nil {
-		return phone, err
-	}
-	mode := cipher.NewCBCDecrypter(block, ivBytes)
-	mode.CryptBlocks(encryptedDataBytes, encryptedDataBytes)
-
-	encryptedDataBytes = pkcs7Unpad(encryptedDataBytes)
-	var result DecryptDataResponse
-	if err := json.Unmarshal(encryptedDataBytes, &result); err != nil {
-		return phone, newError(400, "E_DECRYPT_FAIL")
-	}
-	return result.PhoneNumber, nil
-}
-
-/* Base64 解码：先尝试标准，再尝试无 padding，避免客户端 padding 不一致导致失败 */
-func decodeBase64(s string) ([]byte, error) {
-	b, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		b, err = base64.RawStdEncoding.DecodeString(s)
-	}
-	return b, err
-}
-
-/*PKCS#7 去除填充*/
-func pkcs7Unpad(data []byte) []byte {
-	length := len(data)
-	unpadding := int(data[length-1])
-	if unpadding > length {
-		return data
-	}
-	return data[:length-unpadding]
 }
 
 /*更新用户信息*/

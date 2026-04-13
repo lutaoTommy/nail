@@ -18,11 +18,4 @@ type Config struct {
 	MailAccessKeySecret string `json:"mail_access_key_secret"`
 	MailAccountName     string `json:"mail_account_name"` /*发信地址，如 register@mail.smartepapersystem.com */
 	MailFromAlias       string `json:"mail_from_alias"`   /*发信人显示名（FromAlias）*/
-	/*阿里云图像识别（imagerecog）*/
-	AliAccessKeyId        string `json:"ali_access_key_id"`
-	AliAccessKeySecret    string `json:"ali_access_key_secret"`
-	AliImagerecogEndpoint string `json:"ali_imagerecog_endpoint"` /*如 imagerecog.cn-shanghai.aliyuncs.com */
-	/*微信小程序登录*/
-	WxAppId     string `json:"wx_app_id"`     /*小程序 appid */
-	WxAppSecret string `json:"wx_app_secret"` /*小程序 appsecret */
 }

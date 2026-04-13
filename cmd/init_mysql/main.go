@@ -115,7 +115,7 @@ func getMysqlConn(database string) *gorm.DB {
 	}
 	err = mysqlSession.Set("gorm:table_options", "DEFAULT CHARSET=utf8").AutoMigrate(&handler.CirclePost{},
 		&handler.PostImage{}, &handler.Comment{}, &handler.Like{}, &handler.Collect{}, &handler.User{},
-		&handler.Color{}, &handler.ColorRecog{}, &handler.PostInfo{}, &handler.Device{}, &handler.Avatar{},
+		&handler.Color{}, &handler.PostInfo{}, &handler.Device{}, &handler.Avatar{},
 		&handler.Suggest{}, &handler.SuggestImage{}, &handler.SensitiveWord{}, &handler.Follow{},
 		&handler.OtaVersion{}, &handler.ColorDesc{}, &handler.PostColor{}, &handler.ColorFavorite{}, &handler.LutData{},
 		&handler.ApkVersion{},
