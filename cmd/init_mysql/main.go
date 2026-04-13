@@ -41,8 +41,8 @@ func main() {
 		Token:    "admin",
 		Passwd:   adminPwd,
 		UserId:   "admin",
-		Language: "zh-CN",
-		Nickname: "管理员",
+		Language: "en-US",
+		Nickname: "Admin",
 		Status:   1,
 		Email:    "admin@example.com",
 	}
@@ -59,8 +59,8 @@ func main() {
 		Token:    "tourist",
 		Passwd:   touristPwd,
 		UserId:   "tourist",
-		Language: "zh-CN",
-		Nickname: "游客",
+		Language: "en-US",
+		Nickname: "Tourist",
 		Status:   1,
 	}
 	if err := db.Save(&tourist).Error; err != nil {
@@ -114,7 +114,7 @@ func getMysqlConn(database string) *gorm.DB {
 		panic(err)
 	}
 	err = mysqlSession.Set("gorm:table_options", "DEFAULT CHARSET=utf8").AutoMigrate(&handler.CirclePost{},
-		&handler.PostImage{}, &handler.Comment{}, &handler.Like{}, &handler.Collect{}, &handler.User{}, &handler.UserDestory{},
+		&handler.PostImage{}, &handler.Comment{}, &handler.Like{}, &handler.Collect{}, &handler.User{},
 		&handler.Color{}, &handler.ColorRecog{}, &handler.PostInfo{}, &handler.Device{}, &handler.Avatar{},
 		&handler.Suggest{}, &handler.SuggestImage{}, &handler.SensitiveWord{}, &handler.Follow{},
 		&handler.OtaVersion{}, &handler.ColorDesc{}, &handler.PostColor{}, &handler.ColorFavorite{}, &handler.LutData{},

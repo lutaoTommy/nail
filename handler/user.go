@@ -15,6 +15,7 @@ import (
 	"nail/language"
 
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 /*用户管理*/
@@ -802,6 +803,11 @@ func getUserInfo(user *User) error {
 /*销毁账号*/
 func destroyUserHandler(ctx iris.Context) {
 	var err error
+	type DestroyUserReq struct {
+		DeleteInfo bool `json:"delete_info"`
+	}
+	var req DestroyUserReq
+	_ = ctx.ReadJSON(&req)
 	var user UserDestory
 	user.Token = ctx.GetHeader("token")
 	if err = user.checkToken(); err != nil {
@@ -810,7 +816,7 @@ func destroyUserHandler(ctx iris.Context) {
 		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
 		return
 	}
-	err = destroyUser(&user)
+	err = destroyUser(&user, req.DeleteInfo)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
@@ -819,33 +825,36 @@ func destroyUserHandler(ctx iris.Context) {
 }
 
 /*销毁账号*/
-func destroyUser(user *UserDestory) error {
+func destroyUser(user *UserDestory, deleteInfo bool) error {
 	db := getMysqlConn()
 	var userInfo User
 	err := db.Where("token = ?", user.Token).First(&userInfo).Error
 	if err != nil {
 		return newError(401, "E_NO_TOKEN")
 	}
-	user.Email = userInfo.Email
-	user.Phone = userInfo.Phone
-	user.Passwd = userInfo.Passwd
-	user.OpenID = userInfo.OpenID
-	user.UserId = userInfo.UserId
-	user.Nickname = userInfo.Nickname
-	user.Avatar = userInfo.Avatar
-	user.Language = userInfo.Language
-	user.Biography = userInfo.Biography
-	user.LoginTime = userInfo.LoginTime
-	user.RegisterTime = userInfo.RegisterTime
-	user.DestroyTime = time.Now().Format("2006-01-02 15:04:05")
-	err = db.Create(user).Error
-	if err != nil {
-		return err
-	}
-	/*先清理外联数据*/
-	db.Where("user_id = ?", userInfo.UserId).Delete(&Comment{})
-	db.Where("user_id = ?", userInfo.UserId).Delete(&Like{})
-	return db.Delete(userInfo).Error
+	return db.Transaction(func(tx *gorm.DB) error {
+		if deleteInfo {
+			var postInfoIDs []string
+			if err := tx.Model(&PostInfo{}).Select("id").Where("user_id = ?", userInfo.UserId).Find(&postInfoIDs).Error; err != nil {
+				return err
+			}
+			if len(postInfoIDs) > 0 {
+				if err := tx.Where("post_id IN ?", postInfoIDs).Delete(&PostColor{}).Error; err != nil {
+					return err
+				}
+			}
+			if err := tx.Where("user_id = ?", userInfo.UserId).Delete(&PostInfo{}).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("user_id = ?", userInfo.UserId).Delete(&ColorFavorite{}).Error; err != nil {
+				return err
+			}
+		}
+		if err := tx.Model(&User{}).Where("user_id = ?", userInfo.UserId).Update("token", "").Error; err != nil {
+			return err
+		}
+		return tx.Delete(&userInfo).Error
+	})
 }
 
 /*查询用户列表*/

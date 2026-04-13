@@ -38,6 +38,7 @@ func LoadConfig() error {
 	localConfig.MailAccessKeyId, _ = cfg.GetValue("mail", "mail_access_key_id")
 	localConfig.MailAccessKeySecret, _ = cfg.GetValue("mail", "mail_access_key_secret")
 	localConfig.MailAccountName, _ = cfg.GetValue("mail", "mail_account_name")
+	localConfig.MailFromAlias, _ = cfg.GetValue("mail", "mail_from_alias")
 	/*阿里云图像识别*/
 	localConfig.AliAccessKeyId, _ = cfg.GetValue("ali", "ali_access_key_id")
 	localConfig.AliAccessKeySecret, _ = cfg.GetValue("ali", "ali_access_key_secret")
@@ -80,6 +81,7 @@ func GetMailEndpoint() string        { return localConfig.MailEndpoint }
 func GetMailAccessKeyId() string     { return localConfig.MailAccessKeyId }
 func GetMailAccessKeySecret() string { return localConfig.MailAccessKeySecret }
 func GetMailAccountName() string     { return localConfig.MailAccountName }
+func GetMailFromAlias() string       { return localConfig.MailFromAlias }
 
 /*获取阿里云图像识别配置*/
 func GetAliAccessKeyId() string        { return localConfig.AliAccessKeyId }

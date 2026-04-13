@@ -28,14 +28,35 @@ func sendMail(user *User) (err error) {
 	if err != nil {
 		return err
 	}
-	name := language.GetRawMessage("VERIFICATION_CODE")
+	subject := language.GetRawMessage("MAIL_VERIFY_SUBJECT")
+	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif;">
+    <h2>%s</h2>
+    <p>%s</p>
+    <p style="font-size: 32px; font-weight: bold; color: #1a73e8; text-align: center; letter-spacing: 5px;">%s</p>
+    <p><strong>%s</strong>%s</p>
+    <hr>
+    <p style="color: #999; font-size: 12px;">%s</p>
+    <p style="color: #999; font-size: 12px;">%s</p>
+</body>
+</html>`,
+		language.GetRawMessage("MAIL_VERIFY_TITLE"),
+		language.GetRawMessage("MAIL_VERIFY_DESC"),
+		user.Cert,
+		language.GetRawMessage("MAIL_VERIFY_SECURITY_TITLE"),
+		language.GetRawMessage("MAIL_VERIFY_SECURITY_DESC"),
+		language.GetRawMessage("MAIL_VERIFY_IGNORE"),
+		language.GetRawMessage("MAIL_COPYRIGHT"),
+	)
 	params := &dm20151123.SingleSendMailRequest{
 		AccountName:    tea.String(config.GetMailAccountName()),
+		FromAlias:      tea.String(config.GetMailFromAlias()),
 		AddressType:    tea.Int32(1),
 		ReplyToAddress: tea.Bool(false),
 		ToAddress:      tea.String(user.Email),
-		Subject:        tea.String(name),
-		TextBody:       tea.String(fmt.Sprintf("%s: %s %s", name, user.Cert, language.GetRawMessage("DO_NOT_TELL"))),
+		Subject:        tea.String(subject),
+		HtmlBody:       tea.String(htmlBody),
 	}
 	tryErr := func() (e error) {
 		defer func() {

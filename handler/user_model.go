@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"gorm.io/gorm"
 	"regexp"
 )
 
@@ -9,7 +10,7 @@ type User struct {
 	Cert         string `gorm:"column:cert;size:20;" json:"cert"`
 	Phone        string `gorm:"column:phone;size:20;" json:"phone"`
 	Token        string `gorm:"column:token;size:128" json:"token"`
-	Passwd       string `gorm:"column:passwd;size:100" json:"passwd"` // 明文(历史) / bcrypt hash(新)
+	Passwd       string `gorm:"column:passwd;size:100" json:"passwd"` //bcrypt hash(新)
 	OpenID       string `gorm:"column:openid;size:30" json:"openid"`
 	UserId       string `gorm:"primaryKey;column:user_id;size:20" json:"user_id"`
 	Nickname     string `gorm:"column:nickname;size:100" json:"nickname"`
@@ -24,6 +25,7 @@ type User struct {
 	FollowCount  int    `gorm:"column:follow_count;type:int" json:"follow_count"` // 关注数
 	FansCount    int    `gorm:"column:fans_count;type:int" json:"fans_count"`     // 粉丝数
 	PostCount    int    `gorm:"column:post_count;type:int" json:"post_count"`     // 发布动态数
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 /*表名*/
@@ -153,27 +155,9 @@ func (user User) checkToken() error {
 	return err
 }
 
-/*用户信息*/
+/*销毁账号请求*/
 type UserDestory struct {
-	Email        string `gorm:"column:email;size:100" json:"email"`
-	Phone        string `gorm:"column:phone;size:20;" json:"phone"`
-	Token        string `gorm:"column:token;size:128" json:"token"`
-	Passwd       string `gorm:"column:passwd;size:100" json:"passwd"`
-	OpenID       string `gorm:"column:openid;size:30" json:"openid"`
-	UserId       string `gorm:"column:user_id;size:20" json:"user_id"`
-	Nickname     string `gorm:"column:nickname;size:100" json:"nickname"`
-	Avatar       string `gorm:"column:avatar;size:200" json:"avatar"`
-	Language     string `gorm:"column:language;size:5" json:"language"`
-	Biography    string `gorm:"column:biography;size:200" json:"biography"`
-	LoginTime    string `gorm:"column:login_time;size:20" json:"login_time"`
-	RegisterTime string `gorm:"column:register_time;size:20" json:"register_time"`
-	DestroyTime  string `gorm:"column:destroyTime;size:20" json:"destroyTime"`
-}
-
-/*修改密码请求*/
-type ChangePasswdReq struct {
-	OldPasswd string `json:"old_passwd"`
-	NewPasswd string `json:"new_passwd"`
+	Token string `gorm:"-" json:"token"`
 }
 
 /*字段检查*/
@@ -186,3 +170,10 @@ func (user UserDestory) checkToken() error {
 	}
 	return err
 }
+
+/*修改密码请求*/
+type ChangePasswdReq struct {
+	OldPasswd string `json:"old_passwd"`
+	NewPasswd string `json:"new_passwd"`
+}
+

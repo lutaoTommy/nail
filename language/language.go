@@ -13,20 +13,20 @@ func InitLanguage() {
 
 /*错误信息返回*/
 func GetLanguageMessage(id string) error {
-	if config.GetLanguage() == "en-US" {
-		return errors.New(languageMapEn[id])
-	} else {
+	if config.GetLanguage() == "zh-CN" {
 		return errors.New(languageMapZhcn[id])
+	} else {
+		return errors.New(languageMapEn[id])
 	}
 }
 
 /*字符串返回，若 key 无对应翻译则返回 key 本身*/
 func GetRawMessage(id string) string {
 	var msg string
-	if config.GetLanguage() == "en-US" {
-		msg = languageMapEn[id]
-	} else {
+	if config.GetLanguage() == "zh-CN" {
 		msg = languageMapZhcn[id]
+	} else {
+		msg = languageMapEn[id]
 	}
 	if msg == "" {
 		return id
