@@ -596,20 +596,26 @@ func getUserInfoHandler(ctx iris.Context) {
 	}
 	err = getUserInfo(&user)
 	if err == nil {
+		avatarURL := ""
+		if user.AvatarObjectKey != "" {
+			if u, e := signAvatarURL(user.AvatarObjectKey); e == nil {
+				avatarURL = u
+			}
+		}
 		ctx.JSON(iris.Map{
 			"result_code":  200,
 			"result_msg":   "success",
 			"phone":        user.Phone,
 			"email":        user.Email,
 			"user_id":      user.UserId,
-			"avatar":       user.Avatar,
+			"avatar":       avatarURL,
 			"nickname":     user.Nickname,
 			"language":     user.Language,
 			"biography":    user.Biography,
 			"follow_count": user.FollowCount,
 			"fans_count":   user.FansCount,
 			"post_count":   user.PostCount,
-		})
+		}, iris.JSON{UnescapeHTML: true})
 	} else {
 		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
 	}

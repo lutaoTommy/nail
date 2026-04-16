@@ -11,7 +11,6 @@ type Config struct {
 	OssAccessKeyId     string `json:"oss_access_key_id"`
 	OssAccessKeySecret string `json:"oss_access_key_secret"`
 	OssBucket          string `json:"oss_bucket"`
-	OssDomain          string `json:"oss_domain"` /*访问域名，如 https://fndroid.oss-cn-shanghai.aliyuncs.com */
 	/*邮件（阿里云 DirectMail）*/
 	MailEndpoint        string `json:"mail_endpoint"` /*如 dm.aliyuncs.com */
 	MailAccessKeyId     string `json:"mail_access_key_id"`

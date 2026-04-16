@@ -2,17 +2,13 @@ package handler
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"image/png"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
-
-	"nail/config"
 
 	"github.com/kataras/iris/v12"
 )
@@ -111,9 +107,7 @@ func uploadAvatar(imgData []byte, avatar *Avatar) error {
 		return err
 	}
 
-	/*转为 PNG 统一存储 (可选，保持原有逻辑风格，或直接存储原格式)*/
-	// 这里为了保持原有逻辑的一致性，我们将图片统一转为 PNG上传 OSS
-	// 如果不需要转换，可以直接用 imgData
+	/*转为 PNG 统一存储*/
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
 		return err
@@ -121,13 +115,12 @@ func uploadAvatar(imgData []byte, avatar *Avatar) error {
 
 	avatar.Id = RandStringBytes(3)
 	name := avatar.Id + ".png"
-	// 直接上传 OSS，不再保存本地临时文件
 	ossPath := "avatar/" + name
 	if err := putOssObjectFromBytes(ossPath, buf.Bytes()); err != nil {
 		return err
 	}
 
-	avatar.Url = fmt.Sprintf("%s/%s", config.GetOssDomain(), ossPath)
+	avatar.ObjectKey = ossPath
 	avatar.Time = time.Now().Format("2006-01-02 15:04:05")
 	return db.Create(avatar).Error
 }
@@ -179,12 +172,11 @@ func userUploadAvatar(token string, fileBytes []byte) (string, error) {
 		return "", err
 	}
 
-	avatarURL := fmt.Sprintf("%s/%s", config.GetOssDomain(), ossPath)
-	// 只更新 avatar 字段
-	if err := db.Model(&User{}).Where("user_id = ?", userInfo.UserId).Update("avatar", avatarURL).Error; err != nil {
+	// 只更新 avatar_object_key 字段
+	if err := db.Model(&User{}).Where("user_id = ?", userInfo.UserId).Update("avatar_object_key", ossPath).Error; err != nil {
 		return "", err
 	}
-	return avatarURL, nil
+	return signAvatarURL(ossPath)
 }
 
 /*查询头像列表*/
@@ -203,7 +195,7 @@ func listAvatarHandler(ctx iris.Context) {
 	}
 	data, err := listAvatar(&params)
 	if err == nil {
-		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data}, iris.JSON{UnescapeHTML: true})
 	} else {
 		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
 	}
@@ -217,15 +209,25 @@ func listAvatar(params *Params) ([]AvatarOut, error) {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
 
-	db = db.Table("avatars")
+	db = db.Model(&Avatar{})
 	if err := db.Count(&params.Total).Error; err != nil {
 		return nil, err
 	}
 
-	data := []AvatarOut{}
+	var list []Avatar
 	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-	err := db.Order("time desc").Find(&data).Error
-	return data, err
+	if err := db.Order("time desc").Find(&list).Error; err != nil {
+		return nil, err
+	}
+	out := make([]AvatarOut, 0, len(list))
+	for _, a := range list {
+		url, err := signAvatarURL(a.ObjectKey)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, AvatarOut{Id: a.Id, Url: url, Time: a.Time})
+	}
+	return out, nil
 }
 
 /*删除头像*/
@@ -269,15 +271,6 @@ func removeAvatar(params *Params) error {
 	var avatar Avatar
 	if err := db.Where("id = ?", params.Id).First(&avatar).Error; err != nil {
 		return newError(404, "E_NO_AVATAR")
-	}
-
-	// 删除 OSS 上的文件
-	// 从 URL 解析出 OSS Key (需要根据实际 URL 结构调整，这里假设 URL 是 domain/path)
-	// 简单解析：去除 domain 部分
-	ossDomain := config.GetOssDomain()
-	if strings.HasPrefix(avatar.Url, ossDomain) {
-		objectKey := strings.TrimPrefix(avatar.Url, ossDomain+"/")
-		_ = deleteOssObject(objectKey) // 忽略错误，确保数据库删除能继续
 	}
 
 	return db.Delete(&avatar).Error
@@ -328,6 +321,6 @@ func changeAvatar(params *Params) error {
 		return newError(404, "E_NO_AVATAR")
 	}
 
-	// 只更新 avatar 字段，避免覆盖其他字段
-	return db.Model(&User{}).Where("user_id = ?", userInfo.UserId).Update("avatar", avatar.Url).Error
+	// 只更新 avatar_object_key 字段，避免覆盖其他字段
+	return db.Model(&User{}).Where("user_id = ?", userInfo.UserId).Update("avatar_object_key", avatar.ObjectKey).Error
 }

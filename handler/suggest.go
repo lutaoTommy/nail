@@ -63,7 +63,7 @@ func uploadSuggest(suggest *Suggest) error {
 		return newError(401, "E_NO_TOKEN")
 	}
 	suggest.Id = RandStringBytes(3)
-	suggest.Avatar = userInfo.Avatar
+	suggest.Avatar = userInfo.AvatarObjectKey
 	suggest.Phone = userInfo.Phone
 	suggest.Nickname = userInfo.Nickname
 	suggest.UserId = userInfo.UserId
@@ -201,8 +201,18 @@ func listSuggest(params *Params) ([]SuggestOut, error) {
 	}
 	data := []SuggestOut{}
 	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-	err = db.Order("time desc").Find(&data).Error
-	return data, err
+	if err := db.Order("time desc").Find(&data).Error; err != nil {
+		return nil, err
+	}
+	for i := range data {
+		if data[i].Avatar == "" {
+			continue
+		}
+		if u, err := signAvatarURL(data[i].Avatar); err == nil {
+			data[i].Avatar = u
+		}
+	}
+	return data, nil
 }
 
 /*建议详情*/
@@ -250,7 +260,11 @@ func suggestDetail(ctx iris.Context, params *Params) (SuggestDetail, error) {
 	detail.Id = suggest.Id
 	detail.Phone = suggest.Phone
 	detail.Nickname = suggest.Nickname
-	detail.Avatar = suggest.Avatar
+	if suggest.Avatar != "" {
+		if u, err := signAvatarURL(suggest.Avatar); err == nil {
+			detail.Avatar = u
+		}
+	}
 	detail.Time = suggest.Time
 	detail.Content = suggest.Content
 

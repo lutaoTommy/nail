@@ -174,7 +174,7 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
-	db = db.Select("follows.id, follows.following_id, follows.follow_time, users.nickname, users.avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
+	db = db.Select("follows.id, follows.following_id, follows.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
 	Table("follows").
 	Joins("left join users on follows.following_id = users.user_id").
 	Where("follows.status = ?", 1).
@@ -189,5 +189,16 @@ func userFollowList(params *Params) ([]FollowOut, error) {
     	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
     }
     err = db.Order("follow_time desc").Find(&data).Error
-    return data, err
+    if err != nil {
+    	return nil, err
+    }
+    for i := range data {
+    	if data[i].Avatar == "" {
+    		continue
+    	}
+    	if u, err := signAvatarURL(data[i].Avatar); err == nil {
+    		data[i].Avatar = u
+    	}
+    }
+    return data, nil
 }

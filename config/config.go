@@ -32,7 +32,6 @@ func LoadConfig() error {
 	localConfig.OssAccessKeyId, _ = cfg.GetValue("oss", "oss_access_key_id")
 	localConfig.OssAccessKeySecret, _ = cfg.GetValue("oss", "oss_access_key_secret")
 	localConfig.OssBucket, _ = cfg.GetValue("oss", "oss_bucket")
-	localConfig.OssDomain, _ = cfg.GetValue("oss", "oss_domain")
 	/*邮件*/
 	localConfig.MailEndpoint, _ = cfg.GetValue("mail", "mail_endpoint")
 	localConfig.MailAccessKeyId, _ = cfg.GetValue("mail", "mail_access_key_id")
@@ -67,7 +66,6 @@ func GetOssEndpoint() string        { return localConfig.OssEndpoint }
 func GetOssAccessKeyId() string     { return localConfig.OssAccessKeyId }
 func GetOssAccessKeySecret() string { return localConfig.OssAccessKeySecret }
 func GetOssBucket() string          { return localConfig.OssBucket }
-func GetOssDomain() string          { return localConfig.OssDomain }
 
 /*获取邮件配置*/
 func GetMailEndpoint() string        { return localConfig.MailEndpoint }
