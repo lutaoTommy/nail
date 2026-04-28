@@ -49,7 +49,7 @@ func main() {
 	language.InitLanguage()
 	/*初始化Tire树*/
 	handler.InitTrie()
-	app.Run(iris.TLS(fmt.Sprintf(":%d", config.GetHttpPort()), "www.tintashift.top.pem", "www.tintashift.top.key"), iris.WithConfiguration(iris.Configuration{ // default configuration:
+	app.Run(iris.Addr(fmt.Sprintf(":%d", config.GetHttpPort())), iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
 	}))
 }
