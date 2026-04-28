@@ -70,7 +70,7 @@ func prepareTestUser(t *testing.T) (User, string) {
 	const userId = "test"
 	const token = "test"
 	const nickname = "测试用户"
-	const lang = "zh-CN"
+	const lang = "en-US"
 	const plainPwd = "123456"
 
 	hashed, err := HashPassword(plainPwd)

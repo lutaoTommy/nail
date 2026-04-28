@@ -12,8 +12,18 @@ func LoadConfig() error {
 	if err != nil {
 		return err
 	}
+	/*服务器区域*/
+	localConfig.Area, err = cfg.GetValue("server", "area")
+	if err != nil {
+		return err
+	}
 	/*服务器IP或域名*/
 	localConfig.Domain, err = cfg.GetValue("server", "domain")
+	if err != nil {
+		return err
+	}
+	/*服务器版本*/
+	localConfig.Version, err = cfg.GetValue("server", "version")
 	if err != nil {
 		return err
 	}
@@ -42,8 +52,18 @@ func LoadConfig() error {
 }
 
 /*获取配置*/
+func GetArea() string {
+	return localConfig.Area
+}
+
+/*获取配置*/
 func GetDomain() string {
 	return localConfig.Domain
+}
+
+/*获取配置*/
+func GetVersion() string {
+	return localConfig.Version
 }
 
 /*获取配置*/

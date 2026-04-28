@@ -30,6 +30,7 @@ func main() {
 	})
 	app.HandleDir("/", "./public")
 	app.AllowMethods(iris.MethodOptions)
+	app.PartyFunc("/apk", handler.ApkHandler)
 	app.PartyFunc("/ota", handler.OtaHandler)
 	app.PartyFunc("/user", handler.UserHandler)
 	app.PartyFunc("/word", handler.WordHandler)
@@ -41,7 +42,7 @@ func main() {
 	app.PartyFunc("/avatar", handler.AvatarHandler)
 	app.PartyFunc("/comment", handler.CommentHandler)
 	app.PartyFunc("/suggest", handler.SuggestHandler)
-	app.PartyFunc("/apk", handler.ApkHandler)
+	app.PartyFunc("/service", handler.ServiceHandler)
 	/*日志初始化*/
 	logger.InitLogger()
 	/*多语言初始化*/

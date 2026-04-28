@@ -2,7 +2,9 @@ package config
 
 /*配置文件*/
 type Config struct {
+	Area     string `json:"area"`
 	Domain   string `json:"domain"`
+	Version  string `json:"version"`
 	HttpPort int    `json:"http_port"`
 	MysqlUrl string `json:"mysql_url"`
 	Language string `json:"language"`
