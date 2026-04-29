@@ -117,7 +117,7 @@ func getMysqlConn(database string) *gorm.DB {
 		&handler.PostImage{}, &handler.Comment{}, &handler.Like{}, &handler.Collect{}, &handler.User{},
 		&handler.Color{}, &handler.PostInfo{}, &handler.Device{}, &handler.Avatar{},
 		&handler.Suggest{}, &handler.SuggestImage{}, &handler.SensitiveWord{}, &handler.Follow{},
-		&handler.OtaVersion{}, &handler.ColorDesc{}, &handler.PostColor{}, &handler.ColorFavorite{}, &handler.LutData{},
+		&handler.OtaVersion{}, &handler.ColorDesc{}, &handler.PostColor{}, &handler.ColorFavorite{}, &handler.ColorHistory{}, &handler.LutData{},
 		&handler.ApkVersion{},
 	)
 	if err != nil {

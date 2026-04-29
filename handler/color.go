@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
 )
 
 /*颜色管理*/
@@ -28,6 +29,11 @@ func ColorHandler(color iris.Party) {
 	color.Post("/favorite", addColorFavoriteHandler)
 	color.Post("/favorite/remove", removeColorFavoriteHandler)
 	color.Get("/favorite/list", listColorFavoriteHandler)
+	/*用户颜色足迹（历史）*/
+	color.Post("/history", addColorHistoryHandler)
+	color.Post("/history/remove", removeColorHistoryHandler)
+	color.Get("/history/list", listColorHistoryHandler)
+	color.Get("/history/group", groupColorHistoryHandler)
 }
 
 /*查询色系*/
@@ -419,6 +425,310 @@ func parseColor(params *Params) ([]ColorParseItem, error) {
 			Color:      m.Color,
 			Desc:       m.Desc,
 		})
+	}
+	return result, nil
+}
+
+/*用户颜色足迹（历史）：添加/置顶（body: {"id": "01"}）*/
+func addColorHistoryHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	if err = ctx.ReadJSON(&params); err != nil {
+	} else if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	} else if strings.TrimSpace(params.Id) == "" {
+		err = newError(400, "E_NO_ID")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		return
+	}
+	added, err := addColorHistory(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "added": added})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+	}
+}
+
+func addColorHistory(params *Params) (int, error) {
+	db := getMysqlConn()
+	var userInfo User
+	if err := db.Where("token = ?", params.Token).First(&userInfo).Error; err != nil {
+		return 0, newError(401, "E_NO_TOKEN")
+	}
+	colorID := strings.TrimSpace(params.Id)
+
+	// 校验颜色是否存在
+	var cnt int64
+	if err := db.Table("colors").Where("id = ?", colorID).Count(&cnt).Error; err != nil {
+		return 0, err
+	}
+	if cnt == 0 {
+		return 0, nil
+	}
+
+	now := time.Now().Format("2006-01-02 15:04:05")
+	day := time.Now().Format("2006-01-02")
+
+	// 同一天已存在则更新 update_time 置顶；不同天不覆盖（新增新记录）
+	res := db.Model(&ColorHistory{}).
+		Where("user_id = ? AND day = ? AND color_id = ?", userInfo.UserId, day, colorID).
+		Update("update_time", now)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	if res.RowsAffected > 0 {
+		return 0, nil
+	}
+	row := ColorHistory{
+		Id:         RandStringBytes(3),
+		UserId:     userInfo.UserId,
+		Day:        day,
+		ColorId:    colorID,
+		CreateTime: now,
+		UpdateTime: now,
+	}
+	if err := db.Create(&row).Error; err != nil {
+		return 0, err
+	}
+	return 1, nil
+}
+
+/*用户删除足迹（body: {"id": "01"}）*/
+func removeColorHistoryHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	if err = ctx.ReadJSON(&params); err != nil {
+	} else if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	} else if strings.TrimSpace(params.Id) == "" {
+		err = newError(400, "E_NO_ID")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		return
+	}
+	err = removeColorHistory(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+	}
+}
+
+func removeColorHistory(params *Params) error {
+	db := getMysqlConn()
+	var userInfo User
+	if err := db.Where("token = ?", params.Token).First(&userInfo).Error; err != nil {
+		return newError(401, "E_NO_TOKEN")
+	}
+	historyID := strings.TrimSpace(params.Id)
+	return db.Where("user_id = ? AND id = ?", userInfo.UserId, historyID).Delete(&ColorHistory{}).Error
+}
+
+/*用户足迹列表*/
+func listColorHistoryHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	params.Page = AtoUI(ctx.URLParam("page"), 0)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 0)
+	if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		return
+	}
+	data, err := listColorHistory(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+	}
+}
+
+func listColorHistory(params *Params) ([]ColorHistoryOut, error) {
+	db := getMysqlConn()
+	var userInfo User
+	if err := db.Where("token = ?", params.Token).First(&userInfo).Error; err != nil {
+		return nil, newError(401, "E_NO_TOKEN")
+	}
+	var rows []ColorHistory
+	query := db.Model(&ColorHistory{}).Where("user_id = ?", userInfo.UserId).Order("update_time DESC")
+	if err := query.Count(&params.Total).Error; err != nil {
+		return nil, err
+	}
+	if params.Limit > 0 {
+		page := params.Page
+		if page < 1 {
+			page = 1
+		}
+		query = query.Offset((page - 1) * params.Limit).Limit(params.Limit)
+	}
+	if err := query.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return buildColorHistoryOut(db, rows)
+}
+
+/*用户足迹分组：今天 / 本周（不含今天） / 上周*/
+func groupColorHistoryHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	params.Limit = AtoUI(ctx.URLParam("limit"), 0)
+	if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		return
+	}
+	data, err := groupColorHistory(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": data})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+	}
+}
+
+func groupColorHistory(params *Params) (iris.Map, error) {
+	db := getMysqlConn()
+	var userInfo User
+	if err := db.Where("token = ?", params.Token).First(&userInfo).Error; err != nil {
+		return nil, newError(401, "E_NO_TOKEN")
+	}
+
+	loc := time.Local
+	now := time.Now().In(loc)
+
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+
+	wd := int(now.Weekday())
+	if wd == 0 { // Sunday
+		wd = 7
+	}
+	startOfThisWeek := startOfDay.AddDate(0, 0, -(wd - 1)) // 周一 00:00
+	startOfLastWeek := startOfThisWeek.AddDate(0, 0, -7)
+
+	// 使用字符串比较避免在循环中解析时间
+	todayStr := startOfDay.Format("2006-01-02 15:04:05")
+	thisWeekStr := startOfThisWeek.Format("2006-01-02 15:04:05")
+	lastWeekStr := startOfLastWeek.Format("2006-01-02 15:04:05")
+
+	// 只查上周周一以来的数据
+	var rows []ColorHistory
+	if err := db.Model(&ColorHistory{}).
+		Where("user_id = ? AND update_time >= ?", userInfo.UserId, lastWeekStr).
+		Order("update_time DESC").
+		Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	var todayRows, thisWeekRows, lastWeekRows []ColorHistory
+	seenToday := make(map[string]bool)
+	seenThisWeek := make(map[string]bool)
+	seenLastWeek := make(map[string]bool)
+
+	for _, r := range rows {
+		if r.UpdateTime >= todayStr {
+			if !seenToday[r.ColorId] {
+				todayRows = append(todayRows, r)
+				seenToday[r.ColorId] = true
+			}
+		} else if r.UpdateTime >= thisWeekStr {
+			if !seenThisWeek[r.ColorId] {
+				thisWeekRows = append(thisWeekRows, r)
+				seenThisWeek[r.ColorId] = true
+			}
+		} else if r.UpdateTime >= lastWeekStr {
+			if !seenLastWeek[r.ColorId] {
+				lastWeekRows = append(lastWeekRows, r)
+				seenLastWeek[r.ColorId] = true
+			}
+		}
+	}
+
+	// 每组应用 limit
+	if params.Limit > 0 {
+		if len(todayRows) > params.Limit {
+			todayRows = todayRows[:params.Limit]
+		}
+		if len(thisWeekRows) > params.Limit {
+			thisWeekRows = thisWeekRows[:params.Limit]
+		}
+		if len(lastWeekRows) > params.Limit {
+			lastWeekRows = lastWeekRows[:params.Limit]
+		}
+	}
+
+	// 统一获取颜色详情，避免多次查询
+	allRows := append(append(todayRows, thisWeekRows...), lastWeekRows...)
+	colorHistoryOut, err := buildColorHistoryOut(db, allRows)
+	if err != nil {
+		return nil, err
+	}
+
+	// 建立索引
+	historyMap := make(map[string]ColorHistoryOut, len(colorHistoryOut))
+	for _, item := range colorHistoryOut {
+		historyMap[item.HistoryId] = item
+	}
+
+	// 构建结果
+	return iris.Map{
+		"today":     mapHistory(todayRows, historyMap),
+		"this_week": mapHistory(thisWeekRows, historyMap),
+		"last_week": mapHistory(lastWeekRows, historyMap),
+	}, nil
+}
+
+// 辅助函数：根据 history rows 和已获取的详情 map 构建输出
+func mapHistory(rows []ColorHistory, historyMap map[string]ColorHistoryOut) []ColorHistoryOut {
+	res := make([]ColorHistoryOut, 0, len(rows))
+	for _, r := range rows {
+		if item, ok := historyMap[r.Id]; ok {
+			res = append(res, item)
+		}
+	}
+	return res
+}
+
+// 统一辅助函数：将 ColorHistory rows 转成 []ColorHistoryOut，并保持 rows 顺序
+func buildColorHistoryOut(db *gorm.DB, rows []ColorHistory) ([]ColorHistoryOut, error) {
+	if len(rows) == 0 {
+		return []ColorHistoryOut{}, nil
+	}
+	// 收集去重后的颜色 ID
+	colorIdSet := make(map[string]bool)
+	colorIds := make([]string, 0, len(rows))
+	for _, r := range rows {
+		if !colorIdSet[r.ColorId] {
+			colorIdSet[r.ColorId] = true
+			colorIds = append(colorIds, r.ColorId)
+		}
+	}
+	var list []ColorOut
+	if err := db.Table("colors").Where("id IN ?", colorIds).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	colorByID := make(map[string]ColorOut, len(list))
+	for _, c := range list {
+		colorByID[c.Id] = c
+	}
+	result := make([]ColorHistoryOut, 0, len(rows))
+	for _, r := range rows {
+		if c, ok := colorByID[r.ColorId]; ok {
+			result = append(result, ColorHistoryOut{
+				HistoryId:  r.Id,
+				UpdateTime: r.UpdateTime,
+				ColorOut:   c,
+			})
+		}
 	}
 	return result, nil
 }
