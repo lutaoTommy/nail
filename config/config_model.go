@@ -21,4 +21,9 @@ type Config struct {
 	MailFromAlias       string `json:"mail_from_alias"`   /*发信人显示名（FromAlias）*/
 	/*Google Sign-In：ID Token 的 OAuth Client ID 列表（aud），逗号分隔多个*/
 	GoogleOAuthClientIDs []string `json:"-"`
+	/*Sign in with Apple*/
+	AppleTeamID      string   `json:"-"`
+	AppleKeyID       string   `json:"-"`
+	AppleAuthKeyPath string   `json:"-"`
+	AppleClientIDs   []string `json:"-"` // Bundle ID / Services ID（identity token 的 aud）
 }

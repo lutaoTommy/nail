@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"strings"
 
 	"github.com/Unknwon/goconfig"
@@ -59,6 +60,30 @@ func LoadConfig() error {
 			}
 		}
 	}
+	/*Sign in with Apple*/
+	localConfig.AppleTeamID = ""
+	localConfig.AppleKeyID = ""
+	localConfig.AppleAuthKeyPath = ""
+	localConfig.AppleClientIDs = nil
+	if raw, err := cfg.GetValue("apple", "team_id"); err == nil {
+		localConfig.AppleTeamID = strings.TrimSpace(raw)
+	}
+	if raw, err := cfg.GetValue("apple", "key_id"); err == nil {
+		localConfig.AppleKeyID = strings.TrimSpace(raw)
+	}
+	if raw, err := cfg.GetValue("apple", "auth_key_path"); err == nil {
+		localConfig.AppleAuthKeyPath = strings.TrimSpace(raw)
+	}
+	if localConfig.AppleAuthKeyPath == "" {
+		localConfig.AppleAuthKeyPath = "config/AuthKey.p8"
+	}
+	if raw, err := cfg.GetValue("apple", "client_id"); err == nil && raw != "" {
+		for _, part := range strings.Split(raw, ",") {
+			if s := strings.TrimSpace(part); s != "" {
+				localConfig.AppleClientIDs = append(localConfig.AppleClientIDs, s)
+			}
+		}
+	}
 	return nil
 }
 
@@ -108,4 +133,33 @@ func GetMailFromAlias() string       { return localConfig.MailFromAlias }
 // GetGoogleOAuthClientIDs 返回允许的 Google ID Token aud（Client ID）列表；为空表示未启用服务端校验配置。
 func GetGoogleOAuthClientIDs() []string {
 	return localConfig.GoogleOAuthClientIDs
+}
+
+func GetAppleClientIDs() []string {
+	return localConfig.AppleClientIDs
+}
+
+func GetAppleTeamID() string {
+	return localConfig.AppleTeamID
+}
+
+func GetAppleKeyID() string {
+	return localConfig.AppleKeyID
+}
+
+func GetAppleAuthKeyPath() string {
+	return localConfig.AppleAuthKeyPath
+}
+
+// AppleAuthKeyConfigured 校验 Apple 开发者密钥文件是否存在（.p8 用于服务端扩展能力；identity token 校验使用 Apple 公钥 JWKS）。
+func AppleAuthKeyConfigured() bool {
+	if len(localConfig.AppleClientIDs) == 0 {
+		return false
+	}
+	path := localConfig.AppleAuthKeyPath
+	if path == "" {
+		return false
+	}
+	_, err := os.Stat(path)
+	return err == nil
 }

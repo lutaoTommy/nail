@@ -64,7 +64,7 @@ func googleLogin(ctx context.Context, rawIDToken string) (sessionToken string, e
 	var bySub User
 	err = db.Where("openid = ?", sub).First(&bySub).Error
 	if err == nil {
-		return finalizeGoogleSession(db, &bySub)
+		return finalizeOAuthSession(db, &bySub)
 	}
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return "", err
@@ -130,29 +130,11 @@ func googleLogin(ctx context.Context, rawIDToken string) (sessionToken string, e
 	if err := db.Create(&u).Error; err != nil {
 		var retry User
 		if err2 := db.Where("openid = ?", sub).First(&retry).Error; err2 == nil {
-			return finalizeGoogleSession(db, &retry)
+			return finalizeOAuthSession(db, &retry)
 		}
 		return "", err
 	}
 	return tk, nil
-}
-
-func finalizeGoogleSession(db *gorm.DB, u *User) (string, error) {
-	if u.Status != 1 {
-		return "", newError(400, "E_INVALID_USER")
-	}
-	newTk, err := newToken()
-	if err != nil {
-		return "", err
-	}
-	now := time.Now().Format("2006-01-02 15:04:05")
-	if err := db.Model(&User{}).Where("user_id = ?", u.UserId).Updates(map[string]interface{}{
-		"token":      newTk,
-		"login_time": now,
-	}).Error; err != nil {
-		return "", err
-	}
-	return newTk, nil
 }
 
 func validateGoogleIDToken(ctx context.Context, raw string) (sub, emailNorm string, err error) {
@@ -177,50 +159,15 @@ func validateGoogleIDToken(ctx context.Context, raw string) (sub, emailNorm stri
 		return "", "", newError(401, "E_GOOGLE_ID_TOKEN_INVALID")
 	}
 	emailRaw, _ := payload.Claims["email"].(string)
-	emailRaw = strings.TrimSpace(emailRaw)
-	if emailRaw == "" {
+	emailNorm, err = normalizeOAuthEmail(emailRaw)
+	if err != nil {
+		return "", "", err
+	}
+	if emailNorm == "" {
 		return "", "", newError(401, "E_GOOGLE_EMAIL_NOT_VERIFIED")
 	}
-	tmp := User{Email: strings.ToLower(emailRaw)}
-	if e := tmp.checkMail(); e != nil {
-		return "", "", e
-	}
-	emailNorm = strings.ToLower(emailRaw)
-	if !googleClaimBool(payload.Claims, "email_verified") {
+	if !oauthClaimBool(payload.Claims, "email_verified") {
 		return "", "", newError(401, "E_GOOGLE_EMAIL_NOT_VERIFIED")
 	}
 	return sub, emailNorm, nil
-}
-
-func googleClaimBool(m map[string]interface{}, key string) bool {
-	v, ok := m[key]
-	if !ok {
-		return false
-	}
-	switch t := v.(type) {
-	case bool:
-		return t
-	case string:
-		return strings.EqualFold(t, "true") || t == "1"
-	case float64:
-		return t != 0
-	default:
-		return false
-	}
-}
-
-func nicknameFromEmail(email string) string {
-	local := email
-	if i := strings.IndexByte(email, '@'); i >= 0 {
-		local = email[:i]
-	}
-	local = strings.TrimSpace(local)
-	if local == "" {
-		local = "user"
-	}
-	r := []rune(local)
-	if len(r) > 100 {
-		r = r[:100]
-	}
-	return string(r)
 }

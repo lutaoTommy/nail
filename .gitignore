@@ -4,6 +4,7 @@ public
 test/
 .DS_Store
 config.ini
+config/AuthKey.p8
 docs
 www.fnnail.com.key
 www.fnnail.com.pem

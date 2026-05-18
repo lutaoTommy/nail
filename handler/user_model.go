@@ -11,7 +11,8 @@ type User struct {
 	Phone        string `gorm:"column:phone;size:20;" json:"phone"`
 	Token        string `gorm:"column:token;size:128" json:"token"`
 	Passwd       string `gorm:"column:passwd;size:100" json:"passwd"` //bcrypt hash(新)
-	OpenID       string `gorm:"column:openid;size:255;index" json:"openid"`
+	OpenID       string `gorm:"column:openid;size:255;index" json:"openid"`           // Google sub
+	AppleOpenID  string `gorm:"column:apple_openid;size:255;index" json:"apple_openid"` // Apple sub
 	UserId       string `gorm:"primaryKey;column:user_id;size:20" json:"user_id"`
 	Nickname     string `gorm:"column:nickname;size:100" json:"nickname"`
 	Email        string `gorm:"column:email;size:100" json:"email"`

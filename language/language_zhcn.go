@@ -48,6 +48,11 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_GOOGLE_ID_TOKEN_INVALID"] = "Google ID Token 无效或已过期"
 	languageMapZhcn["E_GOOGLE_EMAIL_NOT_VERIFIED"] = "Google 邮箱未验证，无法登录"
 	languageMapZhcn["E_GOOGLE_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它 Google 账号"
+	languageMapZhcn["E_NO_APPLE_ID_TOKEN"] = "请提供 Apple identity token"
+	languageMapZhcn["E_APPLE_NOT_CONFIGURED"] = "服务器未配置 Apple 登录"
+	languageMapZhcn["E_APPLE_ID_TOKEN_INVALID"] = "Apple identity token 无效或已过期"
+	languageMapZhcn["E_APPLE_EMAIL_NOT_VERIFIED"] = "Apple 邮箱未验证，无法登录"
+	languageMapZhcn["E_APPLE_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它 Apple 账号"
 	languageMapZhcn["E_FILE_NOT_FOUND"] = "文件不存在"
 	/*color*/
 	languageMapZhcn["E_INVALID_COLOR"] = "无此颜色"
