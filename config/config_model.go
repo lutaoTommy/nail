@@ -19,4 +19,6 @@ type Config struct {
 	MailAccessKeySecret string `json:"mail_access_key_secret"`
 	MailAccountName     string `json:"mail_account_name"` /*发信地址，如 register@mail.smartepapersystem.com */
 	MailFromAlias       string `json:"mail_from_alias"`   /*发信人显示名（FromAlias）*/
+	/*Google Sign-In：ID Token 的 OAuth Client ID 列表（aud），逗号分隔多个*/
+	GoogleOAuthClientIDs []string `json:"-"`
 }

@@ -43,6 +43,11 @@ func initLanguageEnus() {
 	/*common*/
 	languageMapEn["E_TOO_LONG"] = "Character length exceeds the limit"
 	languageMapEn["E_INVALID_PARAM"] = "Invalid parameter"
+	languageMapEn["E_NO_GOOGLE_ID_TOKEN"] = "Google ID token is required"
+	languageMapEn["E_GOOGLE_NOT_CONFIGURED"] = "Google sign-in is not configured on the server"
+	languageMapEn["E_GOOGLE_ID_TOKEN_INVALID"] = "Invalid or expired Google ID token"
+	languageMapEn["E_GOOGLE_EMAIL_NOT_VERIFIED"] = "Google email is not verified and cannot be used to sign in"
+	languageMapEn["E_GOOGLE_EMAIL_BOUND_OTHER"] = "This email is already linked to a different Google account"
 	languageMapEn["E_FILE_NOT_FOUND"] = "File not found"
 	/*color*/
 	languageMapEn["E_INVALID_COLOR"] = "No this color"
