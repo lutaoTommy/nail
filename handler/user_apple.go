@@ -114,10 +114,6 @@ func appleLogin(ctx context.Context, rawIdentityToken string) (sessionToken stri
 		return "", err
 	}
 	now := time.Now().Format("2006-01-02 15:04:05")
-	nickname := nicknameFromEmail(emailNorm)
-	if nickname == "user" && emailNorm == "" {
-		nickname = "Apple User"
-	}
 	u := User{
 		AppleOpenID:  sub,
 		Email:        emailNorm,
@@ -125,7 +121,7 @@ func appleLogin(ctx context.Context, rawIdentityToken string) (sessionToken stri
 		UserId:       RandStringBytes(5),
 		Token:        tk,
 		Status:       1,
-		Nickname:     nickname,
+		Nickname:     "TINTA User",
 		Language:     "en-US",
 		RegisterTime: now,
 		LoginTime:    now,
