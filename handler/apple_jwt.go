@@ -42,7 +42,7 @@ var (
 )
 
 func validateAppleIdentityToken(ctx context.Context, raw string) (sub, emailNorm string, err error) {
-	if !config.AppleAuthKeyConfigured() {
+	if !config.AppleSignInEnabled() {
 		return "", "", newError(503, "E_APPLE_NOT_CONFIGURED")
 	}
 	clientIDs := config.GetAppleClientIDs()

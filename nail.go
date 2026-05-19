@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"nail/config"
 	"nail/handler"
 	"nail/language"
@@ -15,6 +16,11 @@ func main() {
 	err := config.LoadConfig()
 	if err != nil {
 		panic(err)
+	}
+	if config.AppleSignInEnabled() {
+		log.Printf("[apple] Sign in enabled, client_id=%v", config.GetAppleClientIDs())
+	} else {
+		log.Printf("[apple] Sign in NOT configured — POST /user/login/apple will return 503 (check config.ini [apple] client_id)")
 	}
 	app := iris.New()
 	app.OnErrorCode(iris.StatusNotFound, notFoundHandler)

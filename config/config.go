@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Unknwon/goconfig"
@@ -77,6 +78,7 @@ func LoadConfig() error {
 	if localConfig.AppleAuthKeyPath == "" {
 		localConfig.AppleAuthKeyPath = "config/AuthKey.p8"
 	}
+	localConfig.AppleAuthKeyPath = resolveExistingPath(localConfig.AppleAuthKeyPath)
 	if raw, err := cfg.GetValue("apple", "client_id"); err == nil && raw != "" {
 		for _, part := range strings.Split(raw, ",") {
 			if s := strings.TrimSpace(part); s != "" {
@@ -84,7 +86,40 @@ func LoadConfig() error {
 			}
 		}
 	}
+	// 兼容 client_ids 写法
+	if len(localConfig.AppleClientIDs) == 0 {
+		if raw, err := cfg.GetValue("apple", "client_ids"); err == nil && raw != "" {
+			for _, part := range strings.Split(raw, ",") {
+				if s := strings.TrimSpace(part); s != "" {
+					localConfig.AppleClientIDs = append(localConfig.AppleClientIDs, s)
+				}
+			}
+		}
+	}
 	return nil
+}
+
+// resolveExistingPath 在多个相对路径候选中查找已存在的文件，返回可用路径（尽量为绝对路径）。
+func resolveExistingPath(path string) string {
+	if path == "" {
+		return ""
+	}
+	candidates := []string{path}
+	if !filepath.IsAbs(path) {
+		candidates = append(candidates,
+			filepath.Join("config", filepath.Base(path)),
+			filepath.Join(filepath.Dir("config.ini"), filepath.Base(path)),
+		)
+	}
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			if abs, err := filepath.Abs(p); err == nil {
+				return abs
+			}
+			return p
+		}
+	}
+	return path
 }
 
 /*获取配置*/
@@ -151,11 +186,13 @@ func GetAppleAuthKeyPath() string {
 	return localConfig.AppleAuthKeyPath
 }
 
-// AppleAuthKeyConfigured 校验 Apple 开发者密钥文件是否存在（.p8 用于服务端扩展能力；identity token 校验使用 Apple 公钥 JWKS）。
-func AppleAuthKeyConfigured() bool {
-	if len(localConfig.AppleClientIDs) == 0 {
-		return false
-	}
+// AppleSignInEnabled 是否已配置 Apple 登录（identity token 校验仅需 client_id / Bundle ID）。
+func AppleSignInEnabled() bool {
+	return len(localConfig.AppleClientIDs) > 0
+}
+
+// AppleAuthKeyPresent .p8 私钥文件是否存在（登录验签不依赖此文件，供后续扩展 Apple 服务端 API）。
+func AppleAuthKeyPresent() bool {
 	path := localConfig.AppleAuthKeyPath
 	if path == "" {
 		return false
