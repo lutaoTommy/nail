@@ -32,6 +32,7 @@ func main() {
 	app.AllowMethods(iris.MethodOptions)
 	app.PartyFunc("/apk", handler.ApkHandler)
 	app.PartyFunc("/ota", handler.OtaHandler)
+	app.PartyFunc("/auth", handler.AuthHandler)
 	app.PartyFunc("/user", handler.UserHandler)
 	app.PartyFunc("/word", handler.WordHandler)
 	app.PartyFunc("/like", handler.LikeHandler)
@@ -55,5 +56,5 @@ func main() {
 }
 
 func notFoundHandler(ctx iris.Context) {
-	ctx.HTML("404: no route for " + ctx.Path())
+	_, _ = ctx.WriteString("404: no route for " + ctx.Path())
 }

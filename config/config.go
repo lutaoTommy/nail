@@ -52,6 +52,11 @@ func LoadConfig() error {
 	localConfig.MailAccessKeySecret, _ = cfg.GetValue("mail", "mail_access_key_secret")
 	localConfig.MailAccountName, _ = cfg.GetValue("mail", "mail_account_name")
 	localConfig.MailFromAlias, _ = cfg.GetValue("mail", "mail_from_alias")
+	/*自定义社交登录签名密钥（HMAC）*/
+	localConfig.SocialAppSecret = ""
+	if raw, err := cfg.GetValue("auth", "social_app_secret"); err == nil {
+		localConfig.SocialAppSecret = strings.TrimSpace(raw)
+	}
 	/*Google OAuth Client ID（可配置多个，逗号分隔）*/
 	localConfig.GoogleOAuthClientIDs = nil
 	if raw, err := cfg.GetValue("google", "oauth_client_ids"); err == nil && raw != "" {
@@ -164,6 +169,7 @@ func GetMailAccessKeyId() string     { return localConfig.MailAccessKeyId }
 func GetMailAccessKeySecret() string { return localConfig.MailAccessKeySecret }
 func GetMailAccountName() string     { return localConfig.MailAccountName }
 func GetMailFromAlias() string       { return localConfig.MailFromAlias }
+func GetSocialAppSecret() string     { return localConfig.SocialAppSecret }
 
 // GetGoogleOAuthClientIDs 返回允许的 Google access_token aud/azp（Client ID）列表；为空表示未启用服务端校验配置。
 func GetGoogleOAuthClientIDs() []string {

@@ -1,6 +1,7 @@
 package language
 
 var languageMapEn map[string]string
+
 /*初始化*/
 func initLanguageEnus() {
 	languageMapEn = make(map[string]string)
@@ -53,6 +54,20 @@ func initLanguageEnus() {
 	languageMapEn["E_APPLE_ID_TOKEN_INVALID"] = "Invalid or expired Apple identity token"
 	languageMapEn["E_APPLE_EMAIL_NOT_VERIFIED"] = "Apple email is not verified and cannot be used to sign in"
 	languageMapEn["E_APPLE_EMAIL_BOUND_OTHER"] = "This email is already linked to a different Apple account"
+	languageMapEn["E_SOCIAL_NOT_CONFIGURED"] = "Social login signing secret is not configured on the server"
+	languageMapEn["E_NO_PROVIDER"] = "provider is required"
+	languageMapEn["E_SOCIAL_PROVIDER_INVALID"] = "unsupported social login provider"
+	languageMapEn["E_NO_OPENID"] = "openid is required"
+	languageMapEn["E_NO_NONCE"] = "nonce is required"
+	languageMapEn["E_NO_TIMESTAMP"] = "timestamp is required"
+	languageMapEn["E_NO_SIGNATURE"] = "signature is required"
+	languageMapEn["E_NO_DEVICE_ID"] = "device_id is required"
+	languageMapEn["E_REQUEST_EXPIRED"] = "request expired, please retry"
+	languageMapEn["E_CHALLENGE_INVALID"] = "invalid challenge"
+	languageMapEn["E_CHALLENGE_EXPIRED"] = "challenge expired"
+	languageMapEn["E_CHALLENGE_USED"] = "challenge already used"
+	languageMapEn["E_SIGNATURE_INVALID"] = "signature verification failed"
+	languageMapEn["E_SOCIAL_EMAIL_BOUND_OTHER"] = "This email is already linked to a different social account"
 	languageMapEn["E_FILE_NOT_FOUND"] = "File not found"
 	/*color*/
 	languageMapEn["E_INVALID_COLOR"] = "No this color"

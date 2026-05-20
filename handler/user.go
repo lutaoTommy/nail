@@ -31,6 +31,8 @@ func UserHandler(user iris.Party) {
 	user.Post("/login/google", googleLoginHandler)
 	/*Apple identity token 登陆*/
 	user.Post("/login/apple", appleLoginHandler)
+	/*自定义签名社交登录（provider + openid + email）*/
+	user.Post("/login/social", socialLoginHandler)
 	/*人员信息*/
 	user.Post("/info/update", updateUserInfoHandler)
 	/*人员信息*/

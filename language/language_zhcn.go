@@ -1,6 +1,7 @@
 package language
 
 var languageMapZhcn map[string]string
+
 /*初始化*/
 func initLanguageZhcn() {
 	languageMapZhcn = make(map[string]string)
@@ -53,6 +54,20 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_APPLE_ID_TOKEN_INVALID"] = "Apple identity token 无效或已过期"
 	languageMapZhcn["E_APPLE_EMAIL_NOT_VERIFIED"] = "Apple 邮箱未验证，无法登录"
 	languageMapZhcn["E_APPLE_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它 Apple 账号"
+	languageMapZhcn["E_SOCIAL_NOT_CONFIGURED"] = "服务器未配置社交登录签名密钥"
+	languageMapZhcn["E_NO_PROVIDER"] = "请提供 provider"
+	languageMapZhcn["E_SOCIAL_PROVIDER_INVALID"] = "不支持的社交登录 provider"
+	languageMapZhcn["E_NO_OPENID"] = "请提供 openid"
+	languageMapZhcn["E_NO_NONCE"] = "请提供 nonce"
+	languageMapZhcn["E_NO_TIMESTAMP"] = "请提供 timestamp"
+	languageMapZhcn["E_NO_SIGNATURE"] = "请提供 signature"
+	languageMapZhcn["E_NO_DEVICE_ID"] = "请提供 device_id"
+	languageMapZhcn["E_REQUEST_EXPIRED"] = "请求已过期，请重试"
+	languageMapZhcn["E_CHALLENGE_INVALID"] = "challenge 无效"
+	languageMapZhcn["E_CHALLENGE_EXPIRED"] = "challenge 已过期"
+	languageMapZhcn["E_CHALLENGE_USED"] = "challenge 已被使用"
+	languageMapZhcn["E_SIGNATURE_INVALID"] = "签名校验失败"
+	languageMapZhcn["E_SOCIAL_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它社交账号"
 	languageMapZhcn["E_FILE_NOT_FOUND"] = "文件不存在"
 	/*color*/
 	languageMapZhcn["E_INVALID_COLOR"] = "无此颜色"
