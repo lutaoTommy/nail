@@ -43,9 +43,9 @@ func initLanguageZhcn() {
 	/*common*/
 	languageMapZhcn["E_TOO_LONG"] = "字符长度超过限制"
 	languageMapZhcn["E_INVALID_PARAM"] = "参数错误"
-	languageMapZhcn["E_NO_GOOGLE_ID_TOKEN"] = "请提供 Google ID Token"
+	languageMapZhcn["E_NO_GOOGLE_ACCESS_TOKEN"] = "请提供 Google access token"
 	languageMapZhcn["E_GOOGLE_NOT_CONFIGURED"] = "服务器未配置 Google 登录"
-	languageMapZhcn["E_GOOGLE_ID_TOKEN_INVALID"] = "Google ID Token 无效或已过期"
+	languageMapZhcn["E_GOOGLE_ACCESS_TOKEN_INVALID"] = "Google access token 无效或已过期"
 	languageMapZhcn["E_GOOGLE_EMAIL_NOT_VERIFIED"] = "Google 邮箱未验证，无法登录"
 	languageMapZhcn["E_GOOGLE_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它 Google 账号"
 	languageMapZhcn["E_NO_APPLE_ID_TOKEN"] = "请提供 Apple identity token"

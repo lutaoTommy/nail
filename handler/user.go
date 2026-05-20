@@ -27,7 +27,7 @@ func UserHandler(user iris.Party) {
 	user.Post("/login", userLoginHandler)
 	/*邮箱登陆*/
 	user.Post("/login/mail", mailLoginHandler)
-	/*Google ID Token 登陆*/
+	/*Google access_token 登陆*/
 	user.Post("/login/google", googleLoginHandler)
 	/*Apple identity token 登陆*/
 	user.Post("/login/apple", appleLoginHandler)

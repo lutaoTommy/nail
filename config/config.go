@@ -165,7 +165,7 @@ func GetMailAccessKeySecret() string { return localConfig.MailAccessKeySecret }
 func GetMailAccountName() string     { return localConfig.MailAccountName }
 func GetMailFromAlias() string       { return localConfig.MailFromAlias }
 
-// GetGoogleOAuthClientIDs 返回允许的 Google ID Token aud（Client ID）列表；为空表示未启用服务端校验配置。
+// GetGoogleOAuthClientIDs 返回允许的 Google access_token aud/azp（Client ID）列表；为空表示未启用服务端校验配置。
 func GetGoogleOAuthClientIDs() []string {
 	return localConfig.GoogleOAuthClientIDs
 }
