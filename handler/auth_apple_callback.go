@@ -50,14 +50,16 @@ func appleCallbackHandler(ctx iris.Context) {
 	}
 
 	if idToken != "" && config.AppleSignInEnabled() {
-		sub, email, vErr := validateAppleIdentityToken(ctx.Request().Context(), idToken)
+		reqCtx := ctx.Request().Context()
+		sub, email, vErr := validateAppleIdentityToken(reqCtx, idToken)
 		if vErr != nil {
-			logger.Warn("%s identity token invalid ip=%s state=%q err=%v", appleCallbackLogTag, ip, state, vErr)
-			writeAppleCallbackHTML(ctx, appleCallbackErrorPage("Invalid identity token"))
-			return
+			detail := DiagnoseAppleIdentityToken(reqCtx, idToken)
+			logger.Warn("%s identity token verify failed ip=%s state=%q detail=%s client_id=%v services_id=%v (still redirect to app)",
+				appleCallbackLogTag, ip, state, detail, config.GetAppleClientIDs(), config.GetAppleServicesIDs())
+		} else {
+			logger.Info("%s identity token ok ip=%s sub=%s email=%t state=%q",
+				appleCallbackLogTag, ip, sub, email != "", state)
 		}
-		logger.Info("%s identity token ok ip=%s sub=%s email=%t state=%q",
-			appleCallbackLogTag, ip, sub, email != "", state)
 	} else if idToken != "" {
 		logger.Info("%s skip token verify (apple client_id not configured) ip=%s state=%q",
 			appleCallbackLogTag, ip, state)

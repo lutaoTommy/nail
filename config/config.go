@@ -85,20 +85,21 @@ func LoadConfig() error {
 	}
 	localConfig.AppleAuthKeyPath = resolveExistingPath(localConfig.AppleAuthKeyPath)
 	if raw, err := cfg.GetValue("apple", "client_id"); err == nil && raw != "" {
-		for _, part := range strings.Split(raw, ",") {
-			if s := strings.TrimSpace(part); s != "" {
-				localConfig.AppleClientIDs = append(localConfig.AppleClientIDs, s)
-			}
-		}
+		appendCommaSeparatedIDs(&localConfig.AppleClientIDs, raw)
 	}
 	// 兼容 client_ids 写法
 	if len(localConfig.AppleClientIDs) == 0 {
 		if raw, err := cfg.GetValue("apple", "client_ids"); err == nil && raw != "" {
-			for _, part := range strings.Split(raw, ",") {
-				if s := strings.TrimSpace(part); s != "" {
-					localConfig.AppleClientIDs = append(localConfig.AppleClientIDs, s)
-				}
-			}
+			appendCommaSeparatedIDs(&localConfig.AppleClientIDs, raw)
+		}
+	}
+	localConfig.AppleServicesIDs = nil
+	if raw, err := cfg.GetValue("apple", "services_id"); err == nil && raw != "" {
+		appendCommaSeparatedIDs(&localConfig.AppleServicesIDs, raw)
+	}
+	if len(localConfig.AppleServicesIDs) == 0 {
+		if raw, err := cfg.GetValue("apple", "services_ids"); err == nil && raw != "" {
+			appendCommaSeparatedIDs(&localConfig.AppleServicesIDs, raw)
 		}
 	}
 	localConfig.AppleDeepLinkScheme = "tintashift"
@@ -110,6 +111,14 @@ func LoadConfig() error {
 		localConfig.AppleDeepLinkPath = strings.TrimSpace(raw)
 	}
 	return nil
+}
+
+func appendCommaSeparatedIDs(dst *[]string, raw string) {
+	for _, part := range strings.Split(raw, ",") {
+		if s := strings.TrimSpace(part); s != "" {
+			*dst = append(*dst, s)
+		}
+	}
 }
 
 // resolveExistingPath 在多个相对路径候选中查找已存在的文件，返回可用路径（尽量为绝对路径）。
@@ -188,6 +197,32 @@ func GetAppleClientIDs() []string {
 	return localConfig.AppleClientIDs
 }
 
+// GetAppleServicesIDs Web Sign in with Apple 的 Services ID 列表。
+func GetAppleServicesIDs() []string {
+	return localConfig.AppleServicesIDs
+}
+
+// GetAppleAllowedAudiences 校验 identity token 时允许的 aud（Bundle ID + Services ID）。
+func GetAppleAllowedAudiences() []string {
+	seen := make(map[string]struct{}, len(localConfig.AppleClientIDs)+len(localConfig.AppleServicesIDs))
+	out := make([]string, 0, len(localConfig.AppleClientIDs)+len(localConfig.AppleServicesIDs))
+	for _, id := range localConfig.AppleClientIDs {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	for _, id := range localConfig.AppleServicesIDs {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
 func GetAppleTeamID() string {
 	return localConfig.AppleTeamID
 }
@@ -200,9 +235,9 @@ func GetAppleAuthKeyPath() string {
 	return localConfig.AppleAuthKeyPath
 }
 
-// AppleSignInEnabled 是否已配置 Apple 登录（identity token 校验仅需 client_id / Bundle ID）。
+// AppleSignInEnabled 是否已配置 Apple 登录（client_id 或 services_id 至少一项）。
 func AppleSignInEnabled() bool {
-	return len(localConfig.AppleClientIDs) > 0
+	return len(localConfig.AppleClientIDs) > 0 || len(localConfig.AppleServicesIDs) > 0
 }
 
 // GetAppleDeepLinkScheme App URL Scheme，用于 /auth/apple/callback 拼 Deep Link。

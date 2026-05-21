@@ -42,16 +42,36 @@ var (
 )
 
 func validateAppleIdentityToken(ctx context.Context, raw string) (sub, emailNorm string, err error) {
-	if !config.AppleSignInEnabled() {
-		return "", "", newError(503, "E_APPLE_NOT_CONFIGURED")
-	}
-	clientIDs := config.GetAppleClientIDs()
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
+	sub, emailNorm, reason := verifyAppleIdentityToken(ctx, raw)
+	if reason != "" {
 		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
 	}
+	return sub, emailNorm, nil
+}
 
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
+// DiagnoseAppleIdentityToken 返回验签失败原因（供日志排查，勿直接返回给客户端）。
+func DiagnoseAppleIdentityToken(ctx context.Context, raw string) string {
+	_, _, reason := verifyAppleIdentityToken(ctx, raw)
+	if reason == "" {
+		return "ok"
+	}
+	return reason
+}
+
+func verifyAppleIdentityToken(ctx context.Context, raw string) (sub, emailNorm, failReason string) {
+	if !config.AppleSignInEnabled() {
+		return "", "", "apple client_id/services_id not configured in config.ini"
+	}
+	allowedAud := config.GetAppleAllowedAudiences()
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", "", "empty identity token"
+	}
+
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithLeeway(60*time.Second),
+	)
 	token, err := parser.Parse(raw, func(t *jwt.Token) (interface{}, error) {
 		kid, _ := t.Header["kid"].(string)
 		if kid == "" {
@@ -59,48 +79,87 @@ func validateAppleIdentityToken(ctx context.Context, raw string) (sub, emailNorm
 		}
 		return getApplePublicKey(ctx, kid)
 	})
-	if err != nil || !token.Valid {
-		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
+	if err != nil {
+		hint := appleJWTUnverifiedHint(raw)
+		return "", "", fmt.Sprintf("jwt parse: %v%s", err, hint)
+	}
+	if !token.Valid {
+		return "", "", "jwt invalid"
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
+		return "", "", "claims type invalid"
 	}
-	if iss, _ := claims["iss"].(string); iss != appleIssuer {
-		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
+	iss, _ := claims["iss"].(string)
+	if iss != appleIssuer {
+		return "", "", fmt.Sprintf("iss mismatch: got %q want %q", iss, appleIssuer)
 	}
+
+	audList := appleClaimAudiences(claims)
 	audOK := false
-	switch aud := claims["aud"].(type) {
-	case string:
-		audOK = appleAudienceAllowed(aud, clientIDs)
-	case []interface{}:
-		for _, a := range aud {
-			if s, ok := a.(string); ok && appleAudienceAllowed(s, clientIDs) {
-				audOK = true
-				break
-			}
+	for _, aud := range audList {
+		if appleAudienceAllowed(aud, allowedAud) {
+			audOK = true
+			break
 		}
 	}
 	if !audOK {
-		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
+		return "", "", fmt.Sprintf("aud %v not in allowed audiences client_id=%v services_id=%v",
+			audList, config.GetAppleClientIDs(), config.GetAppleServicesIDs())
 	}
 
 	sub, _ = claims["sub"].(string)
 	sub = strings.TrimSpace(sub)
 	if sub == "" {
-		return "", "", newError(401, "E_APPLE_ID_TOKEN_INVALID")
+		return "", "", "missing sub"
 	}
 
 	emailRaw, _ := claims["email"].(string)
 	emailNorm, err = normalizeOAuthEmail(emailRaw)
 	if err != nil {
-		return "", "", err
+		return "", "", "email: " + err.Error()
 	}
 	if emailNorm != "" && !oauthClaimBool(claims, "email_verified") {
-		return "", "", newError(401, "E_APPLE_EMAIL_NOT_VERIFIED")
+		return "", "", "email not verified"
 	}
-	return sub, emailNorm, nil
+	return sub, emailNorm, ""
+}
+
+func appleClaimAudiences(claims jwt.MapClaims) []string {
+	var out []string
+	switch aud := claims["aud"].(type) {
+	case string:
+		if s := strings.TrimSpace(aud); s != "" {
+			out = append(out, s)
+		}
+	case []interface{}:
+		for _, a := range aud {
+			if s, ok := a.(string); ok {
+				s = strings.TrimSpace(s)
+				if s != "" {
+					out = append(out, s)
+				}
+			}
+		}
+	}
+	return out
+}
+
+func appleJWTUnverifiedHint(raw string) string {
+	parser := jwt.NewParser()
+	tok, _, err := parser.ParseUnverified(raw, jwt.MapClaims{})
+	if err != nil {
+		return ""
+	}
+	claims, ok := tok.Claims.(jwt.MapClaims)
+	if !ok {
+		return ""
+	}
+	iss, _ := claims["iss"].(string)
+	aud := appleClaimAudiences(claims)
+	exp, _ := claims["exp"]
+	return fmt.Sprintf("; unverified iss=%q aud=%v exp=%v", iss, aud, exp)
 }
 
 func appleAudienceAllowed(aud string, allowed []string) bool {
