@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"net/url"
 	"strings"
@@ -65,7 +64,8 @@ func appleCallbackHandler(ctx iris.Context) {
 			appleCallbackLogTag, ip, state)
 	}
 
-	deepLink, err := buildAppleDeepLink(code, idToken, state)
+	ticket := createAppleOAuthTicket(code, idToken, state)
+	deepLink, err := buildAppleDeepLinkWithTicket(ticket)
 	if err != nil {
 		logger.Error("%s deep link not configured ip=%s scheme=%q path=%q err=%v",
 			appleCallbackLogTag, ip, config.GetAppleDeepLinkScheme(), config.GetAppleDeepLinkPath(), err)
@@ -73,41 +73,19 @@ func appleCallbackHandler(ctx iris.Context) {
 		return
 	}
 
-	logger.Info("%s redirect ip=%s target=%s state=%q", appleCallbackLogTag, ip, appleDeepLinkLogSafe(deepLink), state)
+	logger.Info("%s redirect ip=%s target=%s state=%q ticket=%s",
+		appleCallbackLogTag, ip, deepLink, state, ticket)
 	writeAppleCallbackHTML(ctx, appleCallbackSuccessPage(deepLink))
 }
 
-// appleDeepLinkLogSafe 日志用：仅保留 scheme/path/query 键名，不输出 token 取值。
-func appleDeepLinkLogSafe(raw string) string {
-	u, err := url.Parse(raw)
-	if err != nil {
-		return fmt.Sprintf("%s?…", strings.Split(raw, "?")[0])
-	}
-	keys := make([]string, 0, len(u.Query()))
-	for k := range u.Query() {
-		keys = append(keys, k)
-	}
-	return fmt.Sprintf("%s://%s?%s", u.Scheme, u.Host, strings.Join(keys, "&"))
-}
-
-func buildAppleDeepLink(code, idToken, state string) (string, error) {
+func buildAppleDeepLinkWithTicket(ticket string) (string, error) {
 	scheme := config.GetAppleDeepLinkScheme()
 	path := config.GetAppleDeepLinkPath()
 	if scheme == "" || path == "" {
 		return "", deepLinkConfigError{}
 	}
-
 	q := url.Values{}
-	if code != "" {
-		q.Set("code", code)
-	}
-	if idToken != "" {
-		q.Set("id_token", idToken)
-	}
-	if state != "" {
-		q.Set("state", state)
-	}
-
+	q.Set("ticket", ticket)
 	u := &url.URL{
 		Scheme:   scheme,
 		Host:     path,
@@ -132,7 +110,7 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{if .IsError}}Authorization failed{{else}}Authorization success{{end}}</title>
+  <title>{{if .IsError}}授权失败{{else}}授权成功{{end}}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -144,9 +122,21 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
-    .container { text-align: center; padding: 40px; max-width: 320px; }
-    h1 { font-size: 22px; margin-bottom: 10px; }
-    p { font-size: 14px; opacity: 0.9; line-height: 1.5; }
+    .container { text-align: center; padding: 40px 24px; max-width: 360px; }
+    h1 { font-size: 22px; margin-bottom: 12px; }
+    p { font-size: 14px; opacity: 0.9; line-height: 1.6; margin: 8px 0; }
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 14px 28px;
+      background: #fff;
+      color: #5b6ee1;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
     .spinner {
       border: 3px solid rgba(255,255,255,0.3);
       border-top: 3px solid white;
@@ -162,23 +152,38 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
 <body>
   <div class="container">
     {{if .IsError}}
-    <h1>Authorization failed</h1>
+    <h1>授权失败</h1>
     <p>{{.Message}}</p>
-    <p>Please return to the app and try again.</p>
+    <p>请返回 App 重试。</p>
     {{else}}
-    <div class="spinner"></div>
-    <h1>Authorization success</h1>
-    <p>Returning to the app...</p>
-    <meta http-equiv="refresh" content="0;url={{.DeepLink}}">
-    <script>window.location.replace({{.DeepLinkJS}});</script>
+    <div class="spinner" id="spin"></div>
+    <h1 id="title">授权成功</h1>
+    <p id="hint">正在打开 App…</p>
+    <p>若未自动跳转，请点击下方按钮</p>
+    <a class="btn" id="openApp" href="{{.DeepLink}}">打开 TintaShift App</a>
     {{end}}
   </div>
   {{if not .IsError}}
   <script>
-    setTimeout(function() {
-      document.querySelector('h1').textContent = 'Please open the app';
-      document.querySelector('p').textContent = 'Authorization is complete. Return to the app.';
-    }, 5000);
+    (function() {
+      var link = {{.DeepLinkJS}};
+      function openApp() {
+        window.location.href = link;
+      }
+      openApp();
+      setTimeout(openApp, 400);
+      setTimeout(openApp, 1200);
+      document.getElementById('openApp').addEventListener('click', function(e) {
+        e.preventDefault();
+        openApp();
+      });
+      setTimeout(function() {
+        var spin = document.getElementById('spin');
+        if (spin) spin.style.display = 'none';
+        document.getElementById('title').textContent = '请打开 App';
+        document.getElementById('hint').textContent = '授权已完成，点击按钮返回 App';
+      }, 3500);
+    })();
   </script>
   {{end}}
 </body>

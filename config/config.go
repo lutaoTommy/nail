@@ -10,9 +10,15 @@ import (
 
 /*读取配置文件*/
 var localConfig Config
+var loadedConfigPath string
 
 func LoadConfig() error {
-	cfg, err := goconfig.LoadConfigFile("config.ini")
+	configPath, err := findConfigFile()
+	if err != nil {
+		return err
+	}
+	loadedConfigPath = configPath
+	cfg, err := goconfig.LoadConfigFile(configPath)
 	if err != nil {
 		return err
 	}
@@ -102,6 +108,10 @@ func LoadConfig() error {
 			appendCommaSeparatedIDs(&localConfig.AppleServicesIDs, raw)
 		}
 	}
+	if raw := strings.TrimSpace(os.Getenv("NAIL_APPLE_SERVICES_ID")); raw != "" {
+		localConfig.AppleServicesIDs = nil
+		appendCommaSeparatedIDs(&localConfig.AppleServicesIDs, raw)
+	}
 	localConfig.AppleDeepLinkScheme = "tintashift"
 	localConfig.AppleDeepLinkPath = "apple-login"
 	if raw, err := cfg.GetValue("apple", "deep_link_scheme"); err == nil && strings.TrimSpace(raw) != "" {
@@ -111,6 +121,47 @@ func LoadConfig() error {
 		localConfig.AppleDeepLinkPath = strings.TrimSpace(raw)
 	}
 	return nil
+}
+
+func findConfigFile() (string, error) {
+	const name = "config.ini"
+	candidates := []string{name}
+	if exe, err := os.Executable(); err == nil {
+		candidates = append(candidates, filepath.Join(filepath.Dir(exe), name))
+	}
+	if wd, err := os.Getwd(); err == nil {
+		dir := wd
+		for i := 0; i < 6; i++ {
+			candidates = append(candidates, filepath.Join(dir, name))
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
+		}
+	}
+	seen := make(map[string]struct{}, len(candidates))
+	for _, p := range candidates {
+		if p == "" {
+			continue
+		}
+		if abs, err := filepath.Abs(p); err == nil {
+			p = abs
+		}
+		if _, ok := seen[p]; ok {
+			continue
+		}
+		seen[p] = struct{}{}
+		if _, err := os.Stat(p); err == nil {
+			return p, nil
+		}
+	}
+	return "", os.ErrNotExist
+}
+
+// GetLoadedConfigPath 返回本次启动加载的 config.ini 绝对路径（未加载时为空）。
+func GetLoadedConfigPath() string {
+	return loadedConfigPath
 }
 
 func appendCommaSeparatedIDs(dst *[]string, raw string) {

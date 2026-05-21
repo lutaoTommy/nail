@@ -54,6 +54,7 @@ func initLanguageEnus() {
 	languageMapEn["E_APPLE_ID_TOKEN_INVALID"] = "Invalid or expired Apple identity token"
 	languageMapEn["E_APPLE_EMAIL_NOT_VERIFIED"] = "Apple email is not verified and cannot be used to sign in"
 	languageMapEn["E_APPLE_EMAIL_BOUND_OTHER"] = "This email is already linked to a different Apple account"
+	languageMapEn["E_APPLE_TICKET_INVALID"] = "Authorization ticket is invalid or expired"
 	languageMapEn["E_SOCIAL_NOT_CONFIGURED"] = "Social login signing secret is not configured on the server"
 	languageMapEn["E_NO_PROVIDER"] = "provider is required"
 	languageMapEn["E_SOCIAL_PROVIDER_INVALID"] = "unsupported social login provider"
