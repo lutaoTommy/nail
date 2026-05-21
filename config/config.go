@@ -101,6 +101,14 @@ func LoadConfig() error {
 			}
 		}
 	}
+	localConfig.AppleDeepLinkScheme = "tintashift"
+	localConfig.AppleDeepLinkPath = "apple-login"
+	if raw, err := cfg.GetValue("apple", "deep_link_scheme"); err == nil && strings.TrimSpace(raw) != "" {
+		localConfig.AppleDeepLinkScheme = strings.TrimSpace(raw)
+	}
+	if raw, err := cfg.GetValue("apple", "deep_link_path"); err == nil && strings.TrimSpace(raw) != "" {
+		localConfig.AppleDeepLinkPath = strings.TrimSpace(raw)
+	}
 	return nil
 }
 
@@ -195,6 +203,16 @@ func GetAppleAuthKeyPath() string {
 // AppleSignInEnabled 是否已配置 Apple 登录（identity token 校验仅需 client_id / Bundle ID）。
 func AppleSignInEnabled() bool {
 	return len(localConfig.AppleClientIDs) > 0
+}
+
+// GetAppleDeepLinkScheme App URL Scheme，用于 /auth/apple/callback 拼 Deep Link。
+func GetAppleDeepLinkScheme() string {
+	return localConfig.AppleDeepLinkScheme
+}
+
+// GetAppleDeepLinkPath Deep Link 主机段（如 apple-login），完整形如 scheme://path?query。
+func GetAppleDeepLinkPath() string {
+	return localConfig.AppleDeepLinkPath
 }
 
 // AppleAuthKeyPresent .p8 私钥文件是否存在（登录验签不依赖此文件，供后续扩展 Apple 服务端 API）。

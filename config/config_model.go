@@ -27,5 +27,7 @@ type Config struct {
 	AppleTeamID      string   `json:"-"`
 	AppleKeyID       string   `json:"-"`
 	AppleAuthKeyPath string   `json:"-"`
-	AppleClientIDs   []string `json:"-"` // Bundle ID / Services ID（identity token 的 aud）
+	AppleClientIDs       []string `json:"-"` // Bundle ID / Services ID（identity token 的 aud）
+	AppleDeepLinkScheme  string   `json:"-"` // OAuth 回调后跳回 App，如 tintashift
+	AppleDeepLinkPath    string   `json:"-"` // Deep Link 路径段，如 apple-login → tintashift://apple-login
 }
