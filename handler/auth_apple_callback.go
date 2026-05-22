@@ -128,7 +128,7 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{if .IsError}}授权失败{{else}}授权成功{{end}}</title>
+  <title>{{if .IsError}}Authorization Failed{{else}}Authorization Success{{end}}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -170,15 +170,15 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
 <body>
   <div class="container">
     {{if .IsError}}
-    <h1>授权失败</h1>
+    <h1>Authorization Failed</h1>
     <p>{{.Message}}</p>
-    <p>请返回 App 重试。</p>
+    <p>Please return to the app and try again.</p>
     {{else}}
     <div class="spinner" id="spin"></div>
-    <h1 id="title">授权成功</h1>
-    <p id="hint">正在打开 App…</p>
-    <p>若未自动跳转，请点击下方按钮</p>
-    <a class="btn" id="openApp" href="{{.DeepLink}}">打开 TintaShift App</a>
+    <h1 id="title">Authorization Success</h1>
+    <p id="hint">Opening the app…</p>
+    <p>If you are not redirected automatically, tap the button below.</p>
+    <a class="btn" id="openApp" href="{{.DeepLink}}">Open TintaShift App</a>
     {{end}}
   </div>
   {{if not .IsError}}
@@ -194,8 +194,8 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
       setTimeout(function() {
         var spin = document.getElementById('spin');
         if (spin) spin.style.display = 'none';
-        document.getElementById('title').textContent = '请打开 App';
-        document.getElementById('hint').textContent = '授权已完成，点击按钮返回 App';
+        document.getElementById('title').textContent = 'Please Open the App';
+        document.getElementById('hint').textContent = 'Authorization is complete. Tap the button to return to the app.';
       }, 3500);
     })();
   </script>
