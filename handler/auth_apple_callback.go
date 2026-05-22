@@ -117,10 +117,9 @@ func appleDeepLinkLogSafe(raw string) string {
 }
 
 type appleCallbackPage struct {
-	DeepLink   template.URL
-	DeepLinkJS template.JS
-	Message    string
-	IsError    bool
+	DeepLink template.URL
+	Message  string
+	IsError  bool
 }
 
 var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DOCTYPE html>
@@ -155,16 +154,6 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
       border-radius: 999px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.15);
     }
-    .spinner {
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -174,40 +163,19 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
     <p>{{.Message}}</p>
     <p>Please return to the app and try again.</p>
     {{else}}
-    <div class="spinner" id="spin"></div>
-    <h1 id="title">Authorization Success</h1>
-    <p id="hint">Opening the app…</p>
-    <p>If you are not redirected automatically, tap the button below.</p>
+    <h1>Authorization Success</h1>
+    <p>Authorization is complete.</p>
+    <p>Please tap the button below to return to the app.</p>
     <a class="btn" id="openApp" href="{{.DeepLink}}">Open TintaShift App</a>
     {{end}}
   </div>
-  {{if not .IsError}}
-  <script>
-    (function() {
-      var link = {{.DeepLinkJS}};
-      function openApp() {
-        window.location.href = link;
-      }
-      openApp();
-      setTimeout(openApp, 400);
-      setTimeout(openApp, 1200);
-      setTimeout(function() {
-        var spin = document.getElementById('spin');
-        if (spin) spin.style.display = 'none';
-        document.getElementById('title').textContent = 'Please Open the App';
-        document.getElementById('hint').textContent = 'Authorization is complete. Tap the button to return to the app.';
-      }, 3500);
-    })();
-  </script>
-  {{end}}
 </body>
 </html>`))
 
 func appleCallbackSuccessPage(deepLink string) []byte {
 	return renderAppleCallbackPage(appleCallbackPage{
-		DeepLink:   template.URL(deepLink),
-		DeepLinkJS: template.JS(deepLink),
-		IsError:    false,
+		DeepLink: template.URL(deepLink),
+		IsError:  false,
 	})
 }
 
