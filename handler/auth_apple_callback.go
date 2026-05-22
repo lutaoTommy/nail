@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/url"
 	"strings"
@@ -64,8 +65,7 @@ func appleCallbackHandler(ctx iris.Context) {
 			appleCallbackLogTag, ip, state)
 	}
 
-	ticket := createAppleOAuthTicket(code, idToken, state)
-	deepLink, err := buildAppleDeepLinkWithTicket(ticket)
+	deepLink, err := buildAppleDeepLink(code, idToken, state)
 	if err != nil {
 		logger.Error("%s deep link not configured ip=%s scheme=%q path=%q err=%v",
 			appleCallbackLogTag, ip, config.GetAppleDeepLinkScheme(), config.GetAppleDeepLinkPath(), err)
@@ -73,19 +73,29 @@ func appleCallbackHandler(ctx iris.Context) {
 		return
 	}
 
-	logger.Info("%s redirect ip=%s target=%s state=%q ticket=%s",
-		appleCallbackLogTag, ip, deepLink, state, ticket)
+	logger.Info("%s redirect ip=%s target=%s state=%q",
+		appleCallbackLogTag, ip, appleDeepLinkLogSafe(deepLink), state)
 	writeAppleCallbackHTML(ctx, appleCallbackSuccessPage(deepLink))
 }
 
-func buildAppleDeepLinkWithTicket(ticket string) (string, error) {
+func buildAppleDeepLink(code, idToken, state string) (string, error) {
 	scheme := config.GetAppleDeepLinkScheme()
 	path := config.GetAppleDeepLinkPath()
 	if scheme == "" || path == "" {
-		return "", deepLinkConfigError{}
+		return "", fmt.Errorf("apple deep link not configured")
 	}
+
 	q := url.Values{}
-	q.Set("ticket", ticket)
+	if code != "" {
+		q.Set("code", code)
+	}
+	if idToken != "" {
+		q.Set("id_token", idToken)
+	}
+	if state != "" {
+		q.Set("state", state)
+	}
+
 	u := &url.URL{
 		Scheme:   scheme,
 		Host:     path,
@@ -94,9 +104,17 @@ func buildAppleDeepLinkWithTicket(ticket string) (string, error) {
 	return u.String(), nil
 }
 
-type deepLinkConfigError struct{}
-
-func (deepLinkConfigError) Error() string { return "apple deep link not configured" }
+func appleDeepLinkLogSafe(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return strings.Split(raw, "?")[0] + "?…"
+	}
+	keys := make([]string, 0, len(u.Query()))
+	for k := range u.Query() {
+		keys = append(keys, k)
+	}
+	return fmt.Sprintf("%s://%s?%s", u.Scheme, u.Host, strings.Join(keys, "&"))
+}
 
 type appleCallbackPage struct {
 	DeepLink   template.URL
@@ -173,10 +191,6 @@ var appleCallbackTmpl = template.Must(template.New("apple_callback").Parse(`<!DO
       openApp();
       setTimeout(openApp, 400);
       setTimeout(openApp, 1200);
-      document.getElementById('openApp').addEventListener('click', function(e) {
-        e.preventDefault();
-        openApp();
-      });
       setTimeout(function() {
         var spin = document.getElementById('spin');
         if (spin) spin.style.display = 'none';

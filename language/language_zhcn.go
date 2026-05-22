@@ -54,7 +54,6 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_APPLE_ID_TOKEN_INVALID"] = "Apple identity token 无效或已过期"
 	languageMapZhcn["E_APPLE_EMAIL_NOT_VERIFIED"] = "Apple 邮箱未验证，无法登录"
 	languageMapZhcn["E_APPLE_EMAIL_BOUND_OTHER"] = "该邮箱已绑定其它 Apple 账号"
-	languageMapZhcn["E_APPLE_TICKET_INVALID"] = "授权凭证无效或已过期，请重新登录"
 	languageMapZhcn["E_SOCIAL_NOT_CONFIGURED"] = "服务器未配置社交登录签名密钥"
 	languageMapZhcn["E_NO_PROVIDER"] = "请提供 provider"
 	languageMapZhcn["E_SOCIAL_PROVIDER_INVALID"] = "不支持的社交登录 provider"

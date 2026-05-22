@@ -6,5 +6,4 @@ import "github.com/kataras/iris/v12"
 func AuthHandler(auth iris.Party) {
 	auth.Post("/challenge", socialChallengeHandler)
 	auth.Post("/apple/callback", appleCallbackHandler)
-	auth.Get("/apple/exchange", appleExchangeHandler)
 }
