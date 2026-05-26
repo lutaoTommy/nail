@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"nail/config"
-	"nail/language"
 
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
@@ -58,7 +57,7 @@ func socialChallengeHandler(ctx iris.Context) {
 	}
 	nonce, err := genSocialNonce()
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": 500, "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": 500, "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	ip := GetClientIP(ctx)
@@ -84,13 +83,13 @@ func socialChallengeHandler(ctx iris.Context) {
 func socialLoginHandler(ctx iris.Context) {
 	secret := strings.TrimSpace(config.GetSocialAppSecret())
 	if secret == "" {
-		ctx.JSON(iris.Map{"result_code": 503, "result_msg": language.GetRawMessage("E_SOCIAL_NOT_CONFIGURED")})
+		ctx.JSON(iris.Map{"result_code": 503, "result_msg": Msg(ctx, "E_SOCIAL_NOT_CONFIGURED")})
 		return
 	}
 	var req socialLoginReq
 	if err := ctx.ReadJSON(&req); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_INVALID_PARAM")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_INVALID_PARAM")})
 		return
 	}
 	req.Provider = strings.TrimSpace(strings.ToLower(req.Provider))
@@ -101,62 +100,62 @@ func socialLoginHandler(ctx iris.Context) {
 	req.DeviceID = strings.TrimSpace(req.DeviceID)
 	req.Signature = strings.TrimSpace(req.Signature)
 	if req.Provider == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_PROVIDER")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_PROVIDER")})
 		return
 	}
 	if req.Provider != "google" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_SOCIAL_PROVIDER_INVALID")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_SOCIAL_PROVIDER_INVALID")})
 		return
 	}
 	if req.OpenID == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_OPENID")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_OPENID")})
 		return
 	}
 	if req.Email == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_EMAIL")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_EMAIL")})
 		return
 	}
 	if req.Nonce == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_NONCE")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_NONCE")})
 		return
 	}
 	if req.Timestamp == 0 {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_TIMESTAMP")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_TIMESTAMP")})
 		return
 	}
 	if req.Signature == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_SIGNATURE")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_SIGNATURE")})
 		return
 	}
 	if req.DeviceID == "" {
 		req.DeviceID = strings.TrimSpace(ctx.GetHeader("X-Device-ID"))
 	}
 	if req.DeviceID == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_DEVICE_ID")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_DEVICE_ID")})
 		return
 	}
 	now := time.Now()
 	ts := time.Unix(req.Timestamp, 0)
 	if now.Sub(ts) > socialReqMaxSkew || ts.Sub(now) > socialReqMaxSkew {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_REQUEST_EXPIRED")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_REQUEST_EXPIRED")})
 		return
 	}
 	ip := GetClientIP(ctx)
 	ch, err := consumeSocialChallenge(req.Nonce, req.DeviceID, ip, now)
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	_ = ch
 	payload := socialSignaturePayload(&req)
 	if !verifySocialSignature(payload, req.Signature, secret) {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_SIGNATURE_INVALID")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_SIGNATURE_INVALID")})
 		return
 	}
 
 	token, err := socialLoginByGoogle(req.OpenID, req.Email, req.Nickname)
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": token})
@@ -242,7 +241,6 @@ func socialLoginByGoogle(openid, email, nickname string) (string, error) {
 		Token:        tk,
 		Status:       1,
 		Nickname:     finalNickname,
-		Language:     "en-US",
 		RegisterTime: nowStr,
 		LoginTime:    nowStr,
 	}

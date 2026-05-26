@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"nail/config"
 	"github.com/kataras/iris/v12"
+	"nail/config"
 )
 
 /*服务器管理*/
@@ -11,13 +11,12 @@ func ServiceHandler(service iris.Party) {
 	service.Get("/version", serviceVersionHander)
 }
 
-
 /*服务器版本*/
 func serviceVersionHander(ctx iris.Context) {
 	ctx.JSON(iris.Map{
-		"result_code":  200,
-		"result_msg":   "success",
-		"area":         config.GetArea(),
-		"version":      config.GetVersion(),
+		"result_code": 200,
+		"result_msg":  "success",
+		"area":        config.GetArea(),
+		"version":     config.GetVersion(),
 	})
 }

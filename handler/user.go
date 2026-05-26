@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"nail/language"
-
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
 )
@@ -63,14 +61,14 @@ func mailRegisterVerificationHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 		ctx.JSON(returnData)
 		return
 	}
 	// IP + 邮箱维度限流：同一 IP 15 分钟内最多 10 次，同一邮箱最多 5 次
 	if ok, retrySec := AllowVerificationRequest(ip, user.Email); !ok {
 		returnData["result_code"] = 429
-		returnData["result_msg"] = language.GetRawMessage("E_VERIFICATION_LIMIT")
+		returnData["result_msg"] = Msg(ctx, "E_VERIFICATION_LIMIT")
 		if retrySec > 0 {
 			returnData["retry_after"] = retrySec
 		}
@@ -78,19 +76,19 @@ func mailRegisterVerificationHandler(ctx iris.Context) {
 		return
 	}
 	RecordVerificationRequest(ip, user.Email)
-	err = mailRegisterVerification(&user)
+	err = mailRegisterVerification(&user, LocaleFromCtx(ctx))
 	if err == nil {
 		returnData["result_code"] = 200
 		returnData["result_msg"] = "success"
 	} else {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	}
 	ctx.JSON(returnData)
 }
 
 /*注册获取邮箱验证码*/
-func mailRegisterVerification(user *User) error {
+func mailRegisterVerification(user *User, locale string) error {
 	code := randInt()
 	db := getMysqlConn()
 	var userInfo User
@@ -116,7 +114,7 @@ func mailRegisterVerification(user *User) error {
 		err = db.Updates(userInfo).Error
 	}
 	user.Cert = code
-	return sendMail(user)
+	return sendMail(user, locale)
 }
 
 /*忘记密码获取邮箱验证码*/
@@ -131,13 +129,13 @@ func mailForgetVerificationHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 		ctx.JSON(returnData)
 		return
 	}
 	if ok, retrySec := AllowVerificationRequest(ip, user.Email); !ok {
 		returnData["result_code"] = 429
-		returnData["result_msg"] = language.GetRawMessage("E_VERIFICATION_LIMIT")
+		returnData["result_msg"] = Msg(ctx, "E_VERIFICATION_LIMIT")
 		if retrySec > 0 {
 			returnData["retry_after"] = retrySec
 		}
@@ -145,19 +143,19 @@ func mailForgetVerificationHandler(ctx iris.Context) {
 		return
 	}
 	RecordVerificationRequest(ip, user.Email)
-	err = mailForgetVerificatio(&user)
+	err = mailForgetVerificatio(&user, LocaleFromCtx(ctx))
 	if err == nil {
 		returnData["result_code"] = 200
 		returnData["result_msg"] = "success"
 	} else {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	}
 	ctx.JSON(returnData)
 }
 
 /*忘记密码获取邮箱验证码*/
-func mailForgetVerificatio(user *User) error {
+func mailForgetVerificatio(user *User, locale string) error {
 	code := randInt()
 	db := getMysqlConn()
 	var userInfo User
@@ -178,7 +176,7 @@ func mailForgetVerificatio(user *User) error {
 		err = db.Updates(userInfo).Error
 	}
 	user.Cert = code
-	return sendMail(user)
+	return sendMail(user, locale)
 }
 
 /*邮箱注册*/
@@ -194,7 +192,7 @@ func mailRegisterHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = mailRegister(&user)
 		if err == nil {
@@ -203,7 +201,7 @@ func mailRegisterHandler(ctx iris.Context) {
 			returnData["token"] = user.Token
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -252,7 +250,7 @@ func mailForgetHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = mailForget(&user)
 		if err == nil {
@@ -261,7 +259,7 @@ func mailForgetHandler(ctx iris.Context) {
 			returnData["token"] = user.Token
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -313,14 +311,14 @@ func createUserHandler(ctx iris.Context) {
 		err = user.checkToken()
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = createUser(&user)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": user.Token})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -364,13 +362,13 @@ func userLoginHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_PHONE")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	ip := GetClientIP(ctx)
 	accKey := "phone:" + strings.TrimSpace(user.Phone)
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": language.GetRawMessage("E_ACCOUNT_LOCKED")}
+		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
 		if retrySec > 0 {
 			res["retry_after"] = retrySec
 		}
@@ -380,7 +378,7 @@ func userLoginHandler(ctx iris.Context) {
 	err = userLogin(&user)
 	if err != nil {
 		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
@@ -418,13 +416,13 @@ func mailLoginHandler(ctx iris.Context) {
 	} else if err = user.checkMail(); err != nil {
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	ip := GetClientIP(ctx)
 	accKey := "email:" + strings.TrimSpace(strings.ToLower(user.Email))
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": language.GetRawMessage("E_ACCOUNT_LOCKED")}
+		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
 		if retrySec > 0 {
 			res["retry_after"] = retrySec
 		}
@@ -434,7 +432,7 @@ func mailLoginHandler(ctx iris.Context) {
 	err = mailLogin(&user)
 	if err != nil {
 		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
@@ -486,14 +484,14 @@ func updateUserInfoHandler(ctx iris.Context) {
 		err = user.checkToken()
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = updateUserInfo(&user)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -512,12 +510,6 @@ func updateUserInfo(user *User) error {
 		}
 		data["nickname"] = user.Nickname
 	}
-	if user.Language != "" {
-		if len(user.Language) > 5 {
-			return newError(400, "E_TOO_LONG")
-		}
-		data["language"] = user.Language
-	}
 	if len(user.Biography) > 200 {
 		return newError(400, "E_TOO_LONG")
 	}
@@ -531,14 +523,14 @@ func changePasswdHandler(ctx iris.Context) {
 	var req ChangePasswdReq
 	token := ctx.GetHeader("token")
 	if err = ctx.ReadJSON(&req); err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	if token == "" {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	newToken, err := changePasswd(token, &req)
@@ -546,7 +538,7 @@ func changePasswdHandler(ctx iris.Context) {
 		// 兼容：额外返回 token 字段，不影响老客户端（忽略即可）
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": newToken})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -597,7 +589,7 @@ func getUserInfoHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = getUserInfo(&user)
@@ -616,14 +608,13 @@ func getUserInfoHandler(ctx iris.Context) {
 			"user_id":      user.UserId,
 			"avatar":       avatarURL,
 			"nickname":     user.Nickname,
-			"language":     user.Language,
 			"biography":    user.Biography,
 			"follow_count": user.FollowCount,
 			"fans_count":   user.FansCount,
 			"post_count":   user.PostCount,
 		}, iris.JSON{UnescapeHTML: true})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -650,14 +641,14 @@ func destroyUserHandler(ctx iris.Context) {
 	if err = user.checkToken(); err != nil {
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = destroyUser(&user, req.DeleteInfo)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -708,14 +699,14 @@ func userListHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := userList(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 

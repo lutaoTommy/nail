@@ -26,6 +26,7 @@ func randInt() string {
 var idMu sync.Mutex
 var timeCounter int
 var prevTime int64
+
 /*生成随机字符串*/
 func RandStringBytes(n int) string {
 	idMu.Lock()

@@ -31,14 +31,14 @@ func createCollectHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = createCollect(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -86,14 +86,14 @@ func listCollectHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listCollect(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -148,7 +148,7 @@ func removeCollectHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = removeCollect(&params)
 		if err == nil {
@@ -156,7 +156,7 @@ func removeCollectHandler(ctx iris.Context) {
 			returnData["result_msg"] = "success"
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -197,14 +197,14 @@ func listMyCollectsHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listMyCollects(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 

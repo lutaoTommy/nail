@@ -71,8 +71,10 @@ type ColorFavorite struct {
 	CreateTime string `gorm:"column:create_time;size:20" json:"create_time"`
 }
 
-/*用户颜色足迹（历史）：一条记录只存放一个颜色；
-同一用户同一天同一颜色只保留一条（user_id + day + color_id 唯一），同一天重复访问更新 update_time 置顶；跨天不覆盖，新增新记录*/
+/*
+用户颜色足迹（历史）：一条记录只存放一个颜色；
+同一用户同一天同一颜色只保留一条（user_id + day + color_id 唯一），同一天重复访问更新 update_time 置顶；跨天不覆盖，新增新记录
+*/
 type ColorHistory struct {
 	Id         string `gorm:"primaryKey;column:id;size:20" json:"id"`
 	UserId     string `gorm:"column:user_id;size:20;uniqueIndex:uk_user_day_color_history" json:"user_id"`

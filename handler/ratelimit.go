@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	loginWindow       = 15 * time.Minute
-	loginBlock        = 15 * time.Minute
-	loginMaxFailures  = 5
-	vcodeWindow       = 15 * time.Minute
-	vcodeBlock        = 15 * time.Minute
-	vcodeMaxPerIP     = 10
-	vcodeMaxPerEmail  = 5
+	loginWindow      = 15 * time.Minute
+	loginBlock       = 15 * time.Minute
+	loginMaxFailures = 5
+	vcodeWindow      = 15 * time.Minute
+	vcodeBlock       = 15 * time.Minute
+	vcodeMaxPerIP    = 10
+	vcodeMaxPerEmail = 5
 )
 
 type limitRec struct {
@@ -27,12 +27,12 @@ type limitRec struct {
 }
 
 var (
-	loginLimitByIP     = make(map[string]*limitRec)
-	loginLimitByAcc    = make(map[string]*limitRec)
-	vcodeLimitByIP     = make(map[string]*limitRec)
-	vcodeLimitByEmail  = make(map[string]*limitRec)
-	loginMu            sync.RWMutex
-	vcodeMu            sync.RWMutex
+	loginLimitByIP    = make(map[string]*limitRec)
+	loginLimitByAcc   = make(map[string]*limitRec)
+	vcodeLimitByIP    = make(map[string]*limitRec)
+	vcodeLimitByEmail = make(map[string]*limitRec)
+	loginMu           sync.RWMutex
+	vcodeMu           sync.RWMutex
 )
 
 // GetClientIP 从请求中取客户端 IP（支持 X-Real-IP / X-Forwarded-For / RemoteAddr）

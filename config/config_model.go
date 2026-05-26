@@ -7,7 +7,6 @@ type Config struct {
 	Version  string `json:"version"`
 	HttpPort int    `json:"http_port"`
 	MysqlUrl string `json:"mysql_url"`
-	Language string `json:"language"`
 	/*OSS 阿里云对象存储*/
 	OssEndpoint        string `json:"oss_endpoint"`
 	OssAccessKeyId     string `json:"oss_access_key_id"`

@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"time"
-	"gorm.io/gorm"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
+	"time"
 )
 
 /*点赞管理*/
@@ -28,14 +28,14 @@ func createLikeHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = createLike(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -69,7 +69,6 @@ func createLike(params *Params) error {
 	})
 }
 
-
 /*查询点赞*/
 func listLikeHandler(ctx iris.Context) {
 	var err error
@@ -84,14 +83,14 @@ func listLikeHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listLike(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -113,14 +112,13 @@ func listLike(params *Params) ([]Like, error) {
 	if err != nil {
 		return nil, err
 	}
-    data := []Like{}
-    if params.Page > 0 {
-    	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-    }
-    err = db.Preload("User").Order("time desc").Find(&data).Error
-    return data, err
+	data := []Like{}
+	if params.Page > 0 {
+		db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	}
+	err = db.Preload("User").Order("time desc").Find(&data).Error
+	return data, err
 }
-
 
 /*删除点赞*/
 func removeLikeHandler(ctx iris.Context) {
@@ -136,7 +134,7 @@ func removeLikeHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = removeLike(&params)
 		if err == nil {
@@ -144,7 +142,7 @@ func removeLikeHandler(ctx iris.Context) {
 			returnData["result_msg"] = "success"
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -173,4 +171,3 @@ func removeLike(params *Params) error {
 		return tx.Table("circle_posts").Where("id = ?", params.Id).Update("like_count", expr).Error
 	})
 }
-

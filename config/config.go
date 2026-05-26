@@ -216,11 +216,6 @@ func GetHttpPort() int {
 }
 
 /*获取配置*/
-func GetLanguage() string {
-	return localConfig.Language
-}
-
-/*获取配置*/
 func GetMysqlUrl() string {
 	return localConfig.MysqlUrl
 }

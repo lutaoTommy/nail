@@ -49,7 +49,7 @@ func uploadApkHandler(ctx iris.Context) {
 
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 		ctx.JSON(returnData)
 		return
 	}
@@ -62,7 +62,7 @@ func uploadApkHandler(ctx iris.Context) {
 		returnData["result_msg"] = "success"
 	} else {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	}
 	ctx.JSON(returnData)
 }
@@ -138,7 +138,7 @@ func latestApkHandler(ctx iris.Context) {
 		if err == gorm.ErrRecordNotFound {
 			ctx.JSON(iris.Map{"result_code": 404, "result_msg": "E_NO_APK"})
 		} else {
-			ctx.JSON(iris.Map{"result_code": 500, "result_msg": err.Error()})
+			ctx.JSON(iris.Map{"result_code": 500, "result_msg": ErrMsg(ctx, err)})
 		}
 		return
 	}
@@ -155,4 +155,3 @@ func latestApkHandler(ctx iris.Context) {
 		},
 	})
 }
-

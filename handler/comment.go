@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"time"
-	"gorm.io/gorm"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
+	"time"
 )
 
 /*评论管理*/
@@ -29,14 +29,14 @@ func createCommentHandler(ctx iris.Context) {
 	} else if err = params.checkContent(); err != nil {
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = createComment(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -67,7 +67,6 @@ func createComment(params *Params) error {
 	})
 }
 
-
 /*查询评论*/
 func listCommentHandler(ctx iris.Context) {
 	var err error
@@ -82,14 +81,14 @@ func listCommentHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listComment(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -111,14 +110,13 @@ func listComment(params *Params) ([]Comment, error) {
 	if err != nil {
 		return nil, err
 	}
-    data := []Comment{}
-    if params.Page > 0 {
-    	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-    }
-    err = db.Preload("User").Order("time desc").Find(&data).Error
-    return data, err
+	data := []Comment{}
+	if params.Page > 0 {
+		db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	}
+	err = db.Preload("User").Order("time desc").Find(&data).Error
+	return data, err
 }
-
 
 /*删除评论*/
 func removeCommentHandler(ctx iris.Context) {
@@ -134,7 +132,7 @@ func removeCommentHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = removeComment(&params)
 		if err == nil {
@@ -142,7 +140,7 @@ func removeCommentHandler(ctx iris.Context) {
 			returnData["result_msg"] = "success"
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -170,4 +168,3 @@ func removeComment(params *Params) error {
 		return tx.Table("circle_posts").Where("id = ?", comment.PostId).Update("comment_count", expr).Error
 	})
 }
-

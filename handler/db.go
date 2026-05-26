@@ -2,12 +2,12 @@ package handler
 
 import (
 	"fmt"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"nail/config"
 	"sync"
 	"time"
-	"nail/config"
-	"gorm.io/gorm"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm/logger"
 )
 
 /*mysql*/

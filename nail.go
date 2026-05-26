@@ -22,12 +22,13 @@ func main() {
 		ctx.Header("Access-Control-Allow-Origin", "*")
 		if ctx.Request().Method == "OPTIONS" {
 			ctx.Header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS")
-			ctx.Header("Access-Control-Allow-Headers", "Content-Type, x-requested-with, Token")
+			ctx.Header("Access-Control-Allow-Headers", "Content-Type, x-requested-with, Token, X-Language")
 			ctx.StatusCode(204)
 			return
 		}
 		ctx.Next()
 	})
+	app.Use(handler.LocaleMiddleware)
 	app.HandleDir("/", "./public")
 	app.AllowMethods(iris.MethodOptions)
 	app.PartyFunc("/apk", handler.ApkHandler)

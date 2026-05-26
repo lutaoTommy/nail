@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
-	"time"
-	"gorm.io/gorm"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
+	"time"
 )
 
 /*设备管理*/
@@ -39,14 +39,14 @@ func uploadDeviceHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = uploadDevice(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -111,7 +111,6 @@ func uploadDevice(params *DeviceUpload) error {
 	return tx.Commit().Error
 }
 
-
 /*投送记录*/
 func devicePostHandler(ctx iris.Context) {
 	var err error
@@ -123,14 +122,14 @@ func devicePostHandler(ctx iris.Context) {
 	} else if err = params.checkId(); err != nil {
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = devicePost(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -184,7 +183,6 @@ func devicePost(params *ArrParams) error {
 	return db.Create(&info).Error
 }
 
-
 /*查询换色历史*/
 func devicePostHistoryHandler(ctx iris.Context) {
 	var err error
@@ -192,19 +190,19 @@ func devicePostHistoryHandler(ctx iris.Context) {
 	params.Mac = ctx.URLParam("mac")
 	params.Token = ctx.GetHeader("token")
 	params.Page = AtoUI(ctx.URLParam("page"), 1)
-    params.Limit = AtoUI(ctx.URLParam("limit"), 10)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := devicePostHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -226,12 +224,12 @@ func devicePostHistory(params *Params) ([]PostInfoOut, error) {
 	if err != nil {
 		return nil, err
 	}
-    data := []PostInfoOut{}
-    db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-    err = db.Preload("Colors", func(db *gorm.DB) *gorm.DB {
-    	return db.Order("no ASC")
+	data := []PostInfoOut{}
+	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	err = db.Preload("Colors", func(db *gorm.DB) *gorm.DB {
+		return db.Order("no ASC")
 	}).Order("time desc").Find(&data).Error
-    return data, err
+	return data, err
 }
 
 /*删除历史*/
@@ -248,14 +246,14 @@ func removeDevicePostHistoryHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = removeDevicePostHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -277,7 +275,6 @@ func removeDevicePostHistory(params *Params) error {
 	return db.Delete(info).Error
 }
 
-
 /*设备别名*/
 func deviceRenameHandler(ctx iris.Context) {
 	var err error
@@ -295,14 +292,14 @@ func deviceRenameHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_MAC")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = deviceRename(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -332,16 +329,16 @@ func deviceNameListHandler(ctx iris.Context) {
 	params.Token = ctx.GetHeader("token")
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := deviceNameList(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -363,9 +360,9 @@ func deviceNameList(params *Params) ([]DeviceName, error) {
 	if err != nil {
 		return nil, err
 	}
-    data := []DeviceName{}
-    err = db.Order("time desc").Find(&data).Error
-    return data, err
+	data := []DeviceName{}
+	err = db.Order("time desc").Find(&data).Error
+	return data, err
 }
 
 /*设备删除*/
@@ -382,14 +379,14 @@ func deviceRemoveHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_MAC")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = deviceRemove(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -415,19 +412,19 @@ func listDeviceHandler(ctx iris.Context) {
 	var params Params
 	params.Token = ctx.GetHeader("token")
 	params.Page = AtoUI(ctx.URLParam("page"), 1)
-    params.Limit = AtoUI(ctx.URLParam("limit"), 10)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listDevice(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -445,9 +442,8 @@ func listDevice(params *Params) ([]Device, error) {
 	if err != nil {
 		return nil, err
 	}
-    data := []Device{}
-    db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-    err = db.Order("time desc").Find(&data).Error
-    return data, err
+	data := []Device{}
+	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	err = db.Order("time desc").Find(&data).Error
+	return data, err
 }
-

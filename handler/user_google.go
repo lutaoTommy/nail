@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"nail/config"
-	"nail/language"
 
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
@@ -49,19 +48,19 @@ func googleLoginHandler(ctx iris.Context) {
 	var body googleLoginBody
 	if err := ctx.ReadJSON(&body); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_INVALID_PARAM")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_INVALID_PARAM")})
 		return
 	}
 	body.AccessToken = strings.TrimSpace(body.AccessToken)
 	if body.AccessToken == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_GOOGLE_ACCESS_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_GOOGLE_ACCESS_TOKEN")})
 		return
 	}
 	ip := GetClientIP(ctx)
 	sum := sha256.Sum256([]byte(body.AccessToken))
 	accKey := "google:" + hex.EncodeToString(sum[:])
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": language.GetRawMessage("E_ACCOUNT_LOCKED")}
+		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
 		if retrySec > 0 {
 			res["retry_after"] = retrySec
 		}
@@ -71,7 +70,7 @@ func googleLoginHandler(ctx iris.Context) {
 	token, err := googleLogin(ctx.Request().Context(), body.AccessToken)
 	if err != nil {
 		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
@@ -147,7 +146,6 @@ func googleLogin(ctx context.Context, rawAccessToken string) (sessionToken strin
 		Token:        tk,
 		Status:       1,
 		Nickname:     nicknameFromEmail(emailNorm),
-		Language:     "en-US",
 		RegisterTime: now,
 		LoginTime:    now,
 	}

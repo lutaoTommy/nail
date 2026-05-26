@@ -70,7 +70,6 @@ func prepareTestUser(t *testing.T) (User, string) {
 	const userId = "test"
 	const token = "test"
 	const nickname = "测试用户"
-	const lang = "en-US"
 	const plainPwd = "123456"
 
 	hashed, err := HashPassword(plainPwd)
@@ -89,7 +88,6 @@ func prepareTestUser(t *testing.T) (User, string) {
 		Token:    token,
 		Passwd:   hashed,
 		UserId:   userId,
-		Language: lang,
 		Nickname: nickname,
 		Status:   1,
 	}
@@ -113,7 +111,6 @@ func prepareAdminUser(t *testing.T) {
 		Passwd:   pwd,
 		UserId:   "admin",
 		Nickname: "管理员",
-		Language: "zh-CN",
 		Status:   1,
 	}
 	if err := db.Save(&admin).Error; err != nil {
@@ -357,4 +354,3 @@ func TestUserLoginHandler_RateLimitAfterFailures(t *testing.T) {
 	locked.Value("result_code").Number().Equal(429)
 	locked.Value("retry_after").Number().Gt(0)
 }
-

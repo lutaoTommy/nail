@@ -39,7 +39,7 @@ func uploadSuggestHandler(ctx iris.Context) {
 	}
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		err = uploadSuggest(&suggest)
 		if err == nil {
@@ -48,7 +48,7 @@ func uploadSuggestHandler(ctx iris.Context) {
 			returnData["id"] = suggest.Id
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -86,7 +86,7 @@ func uploadSuggestImageHandler(ctx iris.Context) {
 	}
 
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 
@@ -94,7 +94,7 @@ func uploadSuggestImageHandler(ctx iris.Context) {
 	fileBytes, format, cfg, size, err := readAndValidateImage(ctx)
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 		ctx.JSON(returnData)
 		return
 	}
@@ -110,7 +110,7 @@ func uploadSuggestImageHandler(ctx iris.Context) {
 		returnData["result_msg"] = "success"
 	} else {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	}
 	ctx.JSON(returnData)
 }
@@ -172,14 +172,14 @@ func listSuggestHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listSuggest(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -225,14 +225,14 @@ func suggestDetailHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := suggestDetail(ctx, &params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -295,7 +295,7 @@ func removeSuggestHandler(ctx iris.Context) {
 	}
 
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 
@@ -303,7 +303,7 @@ func removeSuggestHandler(ctx iris.Context) {
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 

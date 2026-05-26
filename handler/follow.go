@@ -1,11 +1,10 @@
 package handler
 
 import (
-	"time"
-	"gorm.io/gorm"
 	"github.com/kataras/iris/v12"
+	"gorm.io/gorm"
+	"time"
 )
-
 
 /*关注账号*/
 func followUserHandler(ctx iris.Context) {
@@ -17,16 +16,16 @@ func followUserHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	} else if params.Id == "" {
 		err = newError(400, "E_NO_ID")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = followUser(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -92,16 +91,16 @@ func cancelFollowHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	} else if params.Id == "" {
 		err = newError(400, "E_NO_ID")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = cancelFollow(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -126,8 +125,8 @@ func cancelFollow(params *Params) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&follow).Updates(map[string]interface{}{
-			"status":       -1,
-			"cancel_time":  now,
+			"status":      -1,
+			"cancel_time": now,
 		}).Error; err != nil {
 			return err
 		}
@@ -143,7 +142,6 @@ func cancelFollow(params *Params) error {
 	})
 }
 
-
 /*查询关注列表*/
 func userFollowListHandler(ctx iris.Context) {
 	var err error
@@ -153,16 +151,16 @@ func userFollowListHandler(ctx iris.Context) {
 	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := userFollowList(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -175,30 +173,30 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
 	db = db.Select("follows.id, follows.following_id, follows.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
-	Table("follows").
-	Joins("left join users on follows.following_id = users.user_id").
-	Where("follows.status = ?", 1).
-	Where("follows.follower_id = ?", userInfo.UserId)
+		Table("follows").
+		Joins("left join users on follows.following_id = users.user_id").
+		Where("follows.status = ?", 1).
+		Where("follows.follower_id = ?", userInfo.UserId)
 
 	err = db.Count(&params.Total).Error
 	if err != nil {
 		return nil, err
 	}
-    data := []FollowOut{}
-    if params.Page > 0 {
-    	db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
-    }
-    err = db.Order("follow_time desc").Find(&data).Error
-    if err != nil {
-    	return nil, err
-    }
-    for i := range data {
-    	if data[i].Avatar == "" {
-    		continue
-    	}
-    	if u, err := signAvatarURL(data[i].Avatar); err == nil {
-    		data[i].Avatar = u
-    	}
-    }
-    return data, nil
+	data := []FollowOut{}
+	if params.Page > 0 {
+		db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	}
+	err = db.Order("follow_time desc").Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	for i := range data {
+		if data[i].Avatar == "" {
+			continue
+		}
+		if u, err := signAvatarURL(data[i].Avatar); err == nil {
+			data[i].Avatar = u
+		}
+	}
+	return data, nil
 }

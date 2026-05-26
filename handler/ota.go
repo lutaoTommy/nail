@@ -44,7 +44,7 @@ func handleUploadOta(ctx iris.Context, versionID string) {
 
 	if err != nil {
 		returnData["result_code"] = getErrCode(err)
-		returnData["result_msg"] = err.Error()
+		returnData["result_msg"] = ErrMsg(ctx, err)
 	} else {
 		defer file.Close()
 		params.Name = info.Filename
@@ -54,7 +54,7 @@ func handleUploadOta(ctx iris.Context, versionID string) {
 			returnData["result_msg"] = "success"
 		} else {
 			returnData["result_code"] = getErrCode(err)
-			returnData["result_msg"] = err.Error()
+			returnData["result_msg"] = ErrMsg(ctx, err)
 		}
 	}
 	ctx.JSON(returnData)
@@ -113,7 +113,7 @@ func handleOtaVersion(ctx iris.Context, versionID string) {
 	}
 
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 
@@ -122,7 +122,7 @@ func handleOtaVersion(ctx iris.Context, versionID string) {
 		data.Url = BuildPublicURL(ctx, "/ota/"+data.Name)
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
-	"strings"
 	"github.com/kataras/iris/v12"
+	"strings"
 )
 
 /*文本管理*/
@@ -22,14 +22,15 @@ func WordHandler(word iris.Party) {
 
 /*初始化*/
 var trie *Trie
+
 func InitTrie() {
 	db := getMysqlConn()
 	var words []SensitiveWord
 	db = db.Table("sensitive_words")
-    err := db.Find(&words).Error
-    if err != nil {
-    	panic(err)
-    }
+	err := db.Find(&words).Error
+	if err != nil {
+		panic(err)
+	}
 	/*初始化 Trie 树*/
 	trie = NewTrie()
 	/*添加敏感词（支持中英文*/
@@ -37,7 +38,6 @@ func InitTrie() {
 		trie.Insert(word.Name)
 	}
 }
-
 
 /*敏感词添加*/
 func addWordHandler(ctx iris.Context) {
@@ -50,14 +50,14 @@ func addWordHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = addWord(&word)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -92,19 +92,19 @@ func listWordHandler(ctx iris.Context) {
 	params.Token = ctx.GetHeader("token")
 	params.Name = ctx.URLParam("name")
 	params.Page = AtoUI(ctx.URLParam("page"), 1)
-    params.Limit = AtoUI(ctx.URLParam("limit"), 10)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
-	} 
+	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listWord(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -146,14 +146,14 @@ func removeWordHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = removeWord(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -192,14 +192,14 @@ func filterWordHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_CONTENT")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = filterWord(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": params.Content})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -228,14 +228,14 @@ func checkWordHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_CONTENT")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = checkWord(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": params.Content, "pass": params.Count == 0})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -256,4 +256,3 @@ func checkWord(params *Params) error {
 	}
 	return nil
 }
-

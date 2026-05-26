@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"nail/language"
-
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
 )
@@ -23,19 +21,19 @@ func appleLoginHandler(ctx iris.Context) {
 	var body appleLoginBody
 	if err := ctx.ReadJSON(&body); err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_INVALID_PARAM")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_INVALID_PARAM")})
 		return
 	}
 	body.IdentityToken = strings.TrimSpace(body.IdentityToken)
 	if body.IdentityToken == "" {
-		ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_NO_APPLE_ID_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_NO_APPLE_ID_TOKEN")})
 		return
 	}
 	ip := GetClientIP(ctx)
 	sum := sha256.Sum256([]byte(body.IdentityToken))
 	accKey := "apple:" + hex.EncodeToString(sum[:])
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": language.GetRawMessage("E_ACCOUNT_LOCKED")}
+		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
 		if retrySec > 0 {
 			res["retry_after"] = retrySec
 		}
@@ -45,7 +43,7 @@ func appleLoginHandler(ctx iris.Context) {
 	token, err := appleLogin(ctx.Request().Context(), body.IdentityToken)
 	if err != nil {
 		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
@@ -122,7 +120,6 @@ func appleLogin(ctx context.Context, rawIdentityToken string) (sessionToken stri
 		Token:        tk,
 		Status:       1,
 		Nickname:     "TINTA User",
-		Language:     "en-US",
 		RegisterTime: now,
 		LoginTime:    now,
 	}

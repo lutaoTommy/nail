@@ -67,7 +67,7 @@ func TestColorListHandler_WithDBPhoneTest(t *testing.T) {
 		Expect().
 		Status(iris.StatusOK).
 		JSON().Object()
-	
+
 	token := login.Value("token").String().Raw()
 
 	resp := e.GET("/color/list").
@@ -171,4 +171,3 @@ func TestLutMaxIdHandler_WithDBPhoneTest(t *testing.T) {
 	resp.Value("result_code").Number().Equal(200)
 	resp.Value("max_id").Number().Ge(0)
 }
-

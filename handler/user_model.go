@@ -7,26 +7,25 @@ import (
 
 /*用户信息*/
 type User struct {
-	Cert         string `gorm:"column:cert;size:20;" json:"cert"`
-	Phone        string `gorm:"column:phone;size:20;" json:"phone"`
-	Token        string `gorm:"column:token;size:128" json:"token"`
-	Passwd       string `gorm:"column:passwd;size:100" json:"passwd"` //bcrypt hash(新)
-	OpenID       string `gorm:"column:openid;size:255;index" json:"openid"`           // Google sub
-	AppleOpenID  string `gorm:"column:apple_openid;size:255;index" json:"apple_openid"` // Apple sub
-	UserId       string `gorm:"primaryKey;column:user_id;size:20" json:"user_id"`
-	Nickname     string `gorm:"column:nickname;size:100" json:"nickname"`
-	Email        string `gorm:"column:email;size:100" json:"email"`
-	AvatarObjectKey string `gorm:"column:avatar_object_key;size:200" json:"-"`
-	Language     string `gorm:"column:language;size:5" json:"language"`
-	Biography    string `gorm:"column:biography;size:200" json:"biography"`
-	CertTime     string `gorm:"column:cert_time;size:20" json:"cert_time"`
-	LoginTime    string `gorm:"column:login_time;size:20" json:"login_time"`
-	RegisterTime string `gorm:"column:register_time;size:20" json:"register_time"`
-	Status       int    `gorm:"column:status;type:tinyint" json:"status"`
-	FollowCount  int    `gorm:"column:follow_count;type:int" json:"follow_count"` // 关注数
-	FansCount    int    `gorm:"column:fans_count;type:int" json:"fans_count"`     // 粉丝数
-	PostCount    int    `gorm:"column:post_count;type:int" json:"post_count"`     // 发布动态数
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+	Cert            string         `gorm:"column:cert;size:20;" json:"cert"`
+	Phone           string         `gorm:"column:phone;size:20;" json:"phone"`
+	Token           string         `gorm:"column:token;size:128" json:"token"`
+	Passwd          string         `gorm:"column:passwd;size:100" json:"passwd"`                   //bcrypt hash(新)
+	OpenID          string         `gorm:"column:openid;size:255;index" json:"openid"`             // Google sub
+	AppleOpenID     string         `gorm:"column:apple_openid;size:255;index" json:"apple_openid"` // Apple sub
+	UserId          string         `gorm:"primaryKey;column:user_id;size:20" json:"user_id"`
+	Nickname        string         `gorm:"column:nickname;size:100" json:"nickname"`
+	Email           string         `gorm:"column:email;size:100" json:"email"`
+	AvatarObjectKey string         `gorm:"column:avatar_object_key;size:200" json:"-"`
+	Biography       string         `gorm:"column:biography;size:200" json:"biography"`
+	CertTime        string         `gorm:"column:cert_time;size:20" json:"cert_time"`
+	LoginTime       string         `gorm:"column:login_time;size:20" json:"login_time"`
+	RegisterTime    string         `gorm:"column:register_time;size:20" json:"register_time"`
+	Status          int            `gorm:"column:status;type:tinyint" json:"status"`
+	FollowCount     int            `gorm:"column:follow_count;type:int" json:"follow_count"` // 关注数
+	FansCount       int            `gorm:"column:fans_count;type:int" json:"fans_count"`     // 粉丝数
+	PostCount       int            `gorm:"column:post_count;type:int" json:"post_count"`     // 发布动态数
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 /*表名*/
@@ -148,4 +147,3 @@ type ChangePasswdReq struct {
 	OldPasswd string `json:"old_passwd"`
 	NewPasswd string `json:"new_passwd"`
 }
-

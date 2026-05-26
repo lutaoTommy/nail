@@ -23,12 +23,13 @@ func createClient() (result *dm20151123.Client, err error) {
 }
 
 /*发送单个邮件*/
-func sendMail(user *User) (err error) {
+func sendMail(user *User, locale string) (err error) {
 	client, err := createClient()
 	if err != nil {
 		return err
 	}
-	subject := language.GetRawMessage("MAIL_VERIFY_SUBJECT")
+	locale = language.NormalizeLocale(locale)
+	subject := language.GetRawMessageFor(locale, "MAIL_VERIFY_SUBJECT")
 	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <body style="font-family: Arial, sans-serif;">
@@ -41,13 +42,13 @@ func sendMail(user *User) (err error) {
     <p style="color: #999; font-size: 12px;">%s</p>
 </body>
 </html>`,
-		language.GetRawMessage("MAIL_VERIFY_TITLE"),
-		language.GetRawMessage("MAIL_VERIFY_DESC"),
+		language.GetRawMessageFor(locale, "MAIL_VERIFY_TITLE"),
+		language.GetRawMessageFor(locale, "MAIL_VERIFY_DESC"),
 		user.Cert,
-		language.GetRawMessage("MAIL_VERIFY_SECURITY_TITLE"),
-		language.GetRawMessage("MAIL_VERIFY_SECURITY_DESC"),
-		language.GetRawMessage("MAIL_VERIFY_IGNORE"),
-		language.GetRawMessage("MAIL_COPYRIGHT"),
+		language.GetRawMessageFor(locale, "MAIL_VERIFY_SECURITY_TITLE"),
+		language.GetRawMessageFor(locale, "MAIL_VERIFY_SECURITY_DESC"),
+		language.GetRawMessageFor(locale, "MAIL_VERIFY_IGNORE"),
+		language.GetRawMessageFor(locale, "MAIL_COPYRIGHT"),
 	)
 	params := &dm20151123.SingleSendMailRequest{
 		AccountName:    tea.String(config.GetMailAccountName()),

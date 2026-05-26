@@ -41,7 +41,6 @@ func main() {
 		Token:    "admin",
 		Passwd:   adminPwd,
 		UserId:   "admin",
-		Language: "en-US",
 		Nickname: "Admin",
 		Status:   1,
 		Email:    "admin@example.com",
@@ -59,7 +58,6 @@ func main() {
 		Token:    "tourist",
 		Passwd:   touristPwd,
 		UserId:   "tourist",
-		Language: "en-US",
 		Nickname: "Tourist",
 		Status:   1,
 	}

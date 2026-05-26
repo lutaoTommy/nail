@@ -52,4 +52,3 @@ func VerifyPassword(stored, plain string) (bool, error) {
 	}
 	return false, cerr
 }
-

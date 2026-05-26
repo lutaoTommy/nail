@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/hex"
 	"fmt"
-	"nail/language"
 	"nail/parser"
 	"strconv"
 	"strings"
@@ -46,14 +45,14 @@ func descColorHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := descColor(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -90,14 +89,14 @@ func listColorHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	colorList, err := listColor(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": colorList})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -139,14 +138,14 @@ func parseColorHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_CONTENT")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := parseColor(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -154,27 +153,27 @@ func parseColorHandler(ctx iris.Context) {
 func lutUrlHandler(ctx iris.Context) {
 	token := ctx.GetHeader("token")
 	if token == "" {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_NO_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_NO_TOKEN")})
 		return
 	}
 	db := getMysqlConn()
 	var userInfo User
 	if err := db.Where("token = ?", token).First(&userInfo).Error; err != nil {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_NO_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_NO_TOKEN")})
 		return
 	}
 	query := db.Model(&LutData{}).Order("lut_id")
 	if startStr := strings.TrimSpace(ctx.URLParam("start")); startStr != "" {
 		start, err := strconv.Atoi(startStr)
 		if err != nil {
-			ctx.JSON(iris.Map{"result_code": 400, "result_msg": language.GetRawMessage("E_INVALID_PARAM")})
+			ctx.JSON(iris.Map{"result_code": 400, "result_msg": Msg(ctx, "E_INVALID_PARAM")})
 			return
 		}
 		query = query.Where("lut_id > ?", start)
 	}
 	var list []LutData
 	if err := query.Find(&list).Error; err != nil {
-		ctx.JSON(iris.Map{"result_code": 500, "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": 500, "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	out := make([]iris.Map, 0, len(list))
@@ -188,18 +187,18 @@ func lutUrlHandler(ctx iris.Context) {
 func lutMaxIdHandler(ctx iris.Context) {
 	token := ctx.GetHeader("token")
 	if token == "" {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_NO_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_NO_TOKEN")})
 		return
 	}
 	db := getMysqlConn()
 	var userInfo User
 	if err := db.Where("token = ?", token).First(&userInfo).Error; err != nil {
-		ctx.JSON(iris.Map{"result_code": 401, "result_msg": language.GetRawMessage("E_NO_TOKEN")})
+		ctx.JSON(iris.Map{"result_code": 401, "result_msg": Msg(ctx, "E_NO_TOKEN")})
 		return
 	}
 	var maxId int
 	if err := db.Model(&LutData{}).Select("COALESCE(MAX(lut_id), 0)").Scan(&maxId).Error; err != nil {
-		ctx.JSON(iris.Map{"result_code": 500, "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": 500, "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "max_id": maxId})
@@ -217,14 +216,14 @@ func addColorFavoriteHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	added, err := addColorFavorite(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "added": added})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -299,14 +298,14 @@ func removeColorFavoriteHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = removeColorFavorite(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -330,14 +329,14 @@ func listColorFavoriteHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listColorFavorite(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -441,14 +440,14 @@ func addColorHistoryHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	added, err := addColorHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "added": added})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -508,14 +507,14 @@ func removeColorHistoryHandler(ctx iris.Context) {
 		err = newError(400, "E_NO_ID")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	err = removeColorHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success"})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -540,14 +539,14 @@ func listColorHistoryHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := listColorHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
@@ -585,14 +584,14 @@ func groupColorHistoryHandler(ctx iris.Context) {
 		err = newError(401, "E_NO_TOKEN")
 	}
 	if err != nil {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
 	data, err := groupColorHistory(&params)
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": data})
 	} else {
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": err.Error()})
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 	}
 }
 
