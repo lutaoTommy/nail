@@ -340,6 +340,8 @@ func TestUserLoginHandler_RateLimitAfterFailures(t *testing.T) {
 			Status(iris.StatusOK).
 			JSON().Object()
 		r.Value("result_code").Number().Equal(400) // E_INVALID_PWD
+		expectedRemaining := 4 - i
+		r.Value("remaining_attempts").Number().Equal(expectedRemaining)
 	}
 
 	locked := e.POST("/user/login").
@@ -352,5 +354,50 @@ func TestUserLoginHandler_RateLimitAfterFailures(t *testing.T) {
 		JSON().Object()
 
 	locked.Value("result_code").Number().Equal(429)
+	locked.Value("remaining_attempts").Number().Equal(0)
 	locked.Value("retry_after").Number().Gt(0)
+}
+
+// 登录成功后应重置失败计数，再次输错密码时从 5 次机会重新开始
+func TestUserLoginHandler_ResetAttemptsAfterSuccess(t *testing.T) {
+	resetRateLimiterForTest()
+	u, plainPwd := prepareTestUser(t)
+
+	app := newUserApp()
+	e := httptest.New(t, app)
+
+	for i := 0; i < 3; i++ {
+		r := e.POST("/user/login").
+			WithJSON(iris.Map{
+				"phone":  u.Phone,
+				"passwd": "wrong_password",
+			}).
+			Expect().
+			Status(iris.StatusOK).
+			JSON().Object()
+		r.Value("result_code").Number().Equal(400)
+		r.Value("remaining_attempts").Number().Equal(4 - i)
+	}
+
+	login := e.POST("/user/login").
+		WithJSON(iris.Map{
+			"phone":  u.Phone,
+			"passwd": plainPwd,
+		}).
+		Expect().
+		Status(iris.StatusOK).
+		JSON().Object()
+	login.Value("result_code").Number().Equal(200)
+	login.Value("token").String().NotEmpty()
+
+	after := e.POST("/user/login").
+		WithJSON(iris.Map{
+			"phone":  u.Phone,
+			"passwd": "wrong_password",
+		}).
+		Expect().
+		Status(iris.StatusOK).
+		JSON().Object()
+	after.Value("result_code").Number().Equal(400)
+	after.Value("remaining_attempts").Number().Equal(4)
 }

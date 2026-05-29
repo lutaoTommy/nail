@@ -86,13 +86,13 @@ func AllowLogin(ip, accountKey string) (allowed bool, retryAfterSec int) {
 	return true, 0
 }
 
-// RecordLoginFailure 记录一次登录失败（IP + 账号）
-func RecordLoginFailure(ip, accountKey string) {
+// RecordLoginFailure 记录一次登录失败（IP + 账号），返回距离锁定还可尝试次数（取 IP/账号较小值）。
+func RecordLoginFailure(ip, accountKey string) int {
 	now := time.Now()
 	loginMu.Lock()
 	defer loginMu.Unlock()
 
-	record := func(m map[string]*limitRec, key string) {
+	record := func(m map[string]*limitRec, key string) int {
 		r, ok := m[key]
 		if !ok {
 			r = &limitRec{WindowStart: now}
@@ -101,7 +101,7 @@ func RecordLoginFailure(ip, accountKey string) {
 		r.mu.Lock()
 		defer r.mu.Unlock()
 		if now.Before(r.BlockedUntil) {
-			return
+			return 0
 		}
 		if now.Sub(r.WindowStart) > loginWindow {
 			r.Count = 0
@@ -111,20 +111,38 @@ func RecordLoginFailure(ip, accountKey string) {
 		if r.Count >= loginMaxFailures {
 			r.BlockedUntil = now.Add(loginBlock)
 		}
+		remaining := loginMaxFailures - r.Count
+		if remaining < 0 {
+			remaining = 0
+		}
+		return remaining
 	}
-	record(loginLimitByIP, ip)
-	record(loginLimitByAcc, accountKey)
+	ipRemaining := record(loginLimitByIP, ip)
+	accRemaining := record(loginLimitByAcc, accountKey)
+	if ipRemaining < accRemaining {
+		return ipRemaining
+	}
+	return accRemaining
 }
 
-// RecordLoginSuccess 登录成功后清除该账号的失败计数（IP 计数保留，防止同 IP 多账号爆破）
+// RecordLoginSuccess 登录成功后重置该 IP 与账号的失败计数与锁定状态。
 func RecordLoginSuccess(ip, accountKey string) {
+	now := time.Now()
 	loginMu.Lock()
 	defer loginMu.Unlock()
-	if r, ok := loginLimitByAcc[accountKey]; ok {
+	reset := func(m map[string]*limitRec, key string) {
+		r, ok := m[key]
+		if !ok {
+			return
+		}
 		r.mu.Lock()
 		r.Count = 0
+		r.BlockedUntil = time.Time{}
+		r.WindowStart = now
 		r.mu.Unlock()
 	}
+	reset(loginLimitByAcc, accountKey)
+	reset(loginLimitByIP, ip)
 }
 
 // AllowVerificationRequest 检查是否允许请求邮箱验证码（按 IP + 邮箱 限制）

@@ -33,17 +33,12 @@ func appleLoginHandler(ctx iris.Context) {
 	sum := sha256.Sum256([]byte(body.IdentityToken))
 	accKey := "apple:" + hex.EncodeToString(sum[:])
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
-		if retrySec > 0 {
-			res["retry_after"] = retrySec
-		}
-		ctx.JSON(res)
+		ctx.JSON(loginLockedResponse(ctx, retrySec))
 		return
 	}
 	token, err := appleLogin(ctx.Request().Context(), body.IdentityToken)
 	if err != nil {
-		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		ctx.JSON(loginFailureResponse(ctx, err, ip, accKey))
 		return
 	}
 	RecordLoginSuccess(ip, accKey)

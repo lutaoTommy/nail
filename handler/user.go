@@ -368,17 +368,12 @@ func userLoginHandler(ctx iris.Context) {
 	ip := GetClientIP(ctx)
 	accKey := "phone:" + strings.TrimSpace(user.Phone)
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
-		if retrySec > 0 {
-			res["retry_after"] = retrySec
-		}
-		ctx.JSON(res)
+		ctx.JSON(loginLockedResponse(ctx, retrySec))
 		return
 	}
 	err = userLogin(&user)
 	if err != nil {
-		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		ctx.JSON(loginFailureResponse(ctx, err, ip, accKey))
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
@@ -422,17 +417,12 @@ func mailLoginHandler(ctx iris.Context) {
 	ip := GetClientIP(ctx)
 	accKey := "email:" + strings.TrimSpace(strings.ToLower(user.Email))
 	if ok, retrySec := AllowLogin(ip, accKey); !ok {
-		res := iris.Map{"result_code": 429, "result_msg": Msg(ctx, "E_ACCOUNT_LOCKED")}
-		if retrySec > 0 {
-			res["retry_after"] = retrySec
-		}
-		ctx.JSON(res)
+		ctx.JSON(loginLockedResponse(ctx, retrySec))
 		return
 	}
 	err = mailLogin(&user)
 	if err != nil {
-		RecordLoginFailure(ip, accKey)
-		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		ctx.JSON(loginFailureResponse(ctx, err, ip, accKey))
 		return
 	}
 	RecordLoginSuccess(ip, accKey)

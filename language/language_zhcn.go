@@ -40,6 +40,8 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_CERT_FIRST"] = "请先获取验证码"
 	languageMapZhcn["E_VERIFICATION_QUICKLY"] = "获取验证码太频繁"
 	languageMapZhcn["E_ACCOUNT_LOCKED"] = "尝试次数过多，请稍后再试"
+	languageMapZhcn["E_ACCOUNT_LOCKED_RETRY"] = "尝试次数过多，请 %d 秒后再试"
+	languageMapZhcn["E_RETRIES_REMAINING"] = "，还可尝试 %d 次"
 	languageMapZhcn["E_VERIFICATION_LIMIT"] = "请求验证码过于频繁，请稍后再试"
 	/*common*/
 	languageMapZhcn["E_TOO_LONG"] = "字符长度超过限制"

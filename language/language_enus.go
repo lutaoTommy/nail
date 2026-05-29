@@ -40,6 +40,8 @@ func initLanguageEnus() {
 	languageMapEn["E_CERT_FIRST"] = "Please get certification number first"
 	languageMapEn["E_VERIFICATION_QUICKLY"] = "You are requesting verification codes too frequently. Please wait a moment"
 	languageMapEn["E_ACCOUNT_LOCKED"] = "Too many attempts. Please try again later"
+	languageMapEn["E_ACCOUNT_LOCKED_RETRY"] = "Too many attempts. Please try again in %d seconds"
+	languageMapEn["E_RETRIES_REMAINING"] = ". %d attempt(s) remaining"
 	languageMapEn["E_VERIFICATION_LIMIT"] = "Too many verification code requests. Please try again later"
 	/*common*/
 	languageMapEn["E_TOO_LONG"] = "Character length exceeds the limit"
