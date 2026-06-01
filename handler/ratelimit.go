@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	loginWindow      = 15 * time.Minute
-	loginBlock       = 15 * time.Minute
+	loginWindow      = 5 * time.Minute
+	loginBlock       = 5 * time.Minute
 	loginMaxFailures = 5
-	vcodeWindow      = 15 * time.Minute
-	vcodeBlock       = 15 * time.Minute
+	vcodeWindow      = 5 * time.Minute
+	vcodeBlock       = 5 * time.Minute
 	vcodeMaxPerIP    = 10
 	vcodeMaxPerEmail = 5
 )
