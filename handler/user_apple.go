@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"nail/logger"
+
 	"github.com/kataras/iris/v12"
 	"gorm.io/gorm"
 )
@@ -48,6 +50,8 @@ func appleLoginHandler(ctx iris.Context) {
 func appleLogin(ctx context.Context, rawIdentityToken string) (sessionToken string, err error) {
 	sub, emailNorm, vErr := validateAppleIdentityToken(ctx, rawIdentityToken)
 	if vErr != nil {
+		detail := DiagnoseAppleIdentityToken(ctx, rawIdentityToken)
+		logger.Warn("[Apple Login] identity token verify failed detail=%s", detail)
 		return "", vErr
 	}
 	db := getMysqlConn()
