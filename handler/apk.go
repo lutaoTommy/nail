@@ -89,7 +89,7 @@ func uploadApk(file multipart.File, params *Params) error {
 		}
 	}
 
-	path := filepath.Join(dir, cleanName)
+	path := filepath.Join(dir, "latest.apk")
 	dstFile, err := os.Create(path)
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func uploadApk(file multipart.File, params *Params) error {
 	apk := ApkVersion{
 		Id:      "latest",
 		Version: params.Name,
-		Name:    cleanName,
+		Name:    "latest.apk",
 		Time:    now,
 	}
 
