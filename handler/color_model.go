@@ -8,10 +8,16 @@ type Color struct {
 	B          int    `gorm:"column:b;type:int" json:"b"`
 	X          int    `gorm:"column:x;type:int" json:"x"`
 	Y          int    `gorm:"column:y;type:int" json:"y"`
+	Vp3        int    `gorm:"column:vp3;type:int" json:"vp3"`
+	Vp2        int    `gorm:"column:vp2;type:int" json:"vp2"`
+	Vp1        int    `gorm:"column:vp1;type:int" json:"vp1"`
+	Vn3        int    `gorm:"column:vn3;type:int" json:"vn3"`
+	Vn2        int    `gorm:"column:vn2;type:int" json:"vn2"`
+	Vn1        int    `gorm:"column:vn1;type:int" json:"vn1"`
 	Desc       string `gorm:"column:desc;size:10" json:"desc"`
 	Count      int    `gorm:"column:count;type:int" json:"count"`
-	Name       string `gorm:"column:name;size:30" json:"name"`
-	Color      string `gorm:"column:color;size:30" json:"color"`
+	Name       string `gorm:"column:name;size:50" json:"name"`
+	Color      string `gorm:"column:color;size:50" json:"color"`
 	GroupId    int    `gorm:"column:group_id" json:"group_id"`
 	Default    bool   `gorm:"column:default;type:tinyint(1)" json:"default"` /* 是否设备内置颜色：1-62 为 true，63-79 为 false */
 	CreateTime string `gorm:"column:create_time;size:20" json:"create_time"`
@@ -26,6 +32,12 @@ type ColorOut struct {
 	B       uint8  `json:"b"`
 	X       int    `json:"x"`
 	Y       int    `json:"y"`
+	Vp3     int    `json:"vp3"`
+	Vp2     int    `json:"vp2"`
+	Vp1     int    `json:"vp1"`
+	Vn3     int    `json:"vn3"`
+	Vn2     int    `json:"vn2"`
+	Vn1     int    `json:"vn1"`
 	Name    string `json:"name"`
 	Desc    string `json:"desc"`
 	Color   string `json:"color"`
