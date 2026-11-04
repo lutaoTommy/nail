@@ -20,6 +20,7 @@ type Color struct {
 	Color      string `gorm:"column:color;size:50" json:"color"`
 	GroupId    int    `gorm:"column:group_id" json:"group_id"`
 	Default    bool   `gorm:"column:default;type:tinyint(1)" json:"default"` /* 是否设备内置颜色：1-62 为 true，63-79 为 false */
+	New        bool   `gorm:"column:new;type:tinyint(1)" json:"new"`         /* 是否新增颜色 */
 	CreateTime string `gorm:"column:create_time;size:20" json:"create_time"`
 	UpdateTime string `gorm:"column:update_time;size:20" json:"update_time"`
 }
@@ -42,6 +43,7 @@ type ColorOut struct {
 	Desc    string `json:"desc"`
 	Color   string `json:"color"`
 	Default bool   `json:"default"` /* 是否设备内置颜色 */
+	New     bool   `json:"new"`     /* 是否新增颜色 */
 	GroupId int    `json:"group_id"`
 }
 

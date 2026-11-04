@@ -1,5 +1,10 @@
 [
-  {"id": 1, "name": "流行色", "color": "Popular Colors"},
-  {"id": 2, "name": "经典色", "color": "Classic Colors"},
-  {"id": 3, "name": "调试色", "color": "Derived Colors"}
+  {"id": 1, "name": "红", "color": "Red", "no": 2},
+  {"id": 2, "name": "橙", "color": "Orange", "no": 3},
+  {"id": 3, "name": "黄", "color": "Yellow", "no": 4},
+  {"id": 4, "name": "绿", "color": "Green", "no": 5},
+  {"id": 5, "name": "青", "color": "Cyan", "no": 6},
+  {"id": 6, "name": "蓝", "color": "Blue", "no": 7},
+  {"id": 7, "name": "紫", "color": "Purple", "no": 8},
+  {"id": 8, "name": "无彩", "color": "Neutral", "no": 9}
 ]
