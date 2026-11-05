@@ -184,11 +184,5 @@
   {"id": "N0487", "name": "N0487", "color": "N0487", "group_id": 8, "new": false, "default": true, "desc": "#BEC4C0", "x": 13, "y": 9, "r": 190, "g": 196, "b": 192, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
   {"id": "N0514", "name": "N0514", "color": "N0514", "group_id": 8, "new": false, "default": true, "desc": "#C6BFB5", "x": 14, "y": 7, "r": 198, "g": 191, "b": 181, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
   {"id": "N0569", "name": "N0569", "color": "N0569", "group_id": 8, "new": false, "default": true, "desc": "#BCB1B4", "x": 9, "y": 4, "r": 188, "g": 177, "b": 180, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "N0953", "name": "N0953", "color": "N0953", "group_id": 8, "new": false, "default": true, "desc": "#848487", "x": 6, "y": 0, "r": 132, "g": 132, "b": 135, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "B0299", "name": "B0299", "color": "B0299", "group_id": 9, "new": true, "default": true, "desc": "#C4D4EE", "x": 19, "y": 1, "r": 196, "g": 212, "b": 238, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "B0930", "name": "B0930", "color": "B0930", "group_id": 9, "new": true, "default": true, "desc": "#585CB9", "x": 19, "y": 4, "r": 88, "g": 92, "b": 185, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "B1200", "name": "B1200", "color": "B1200", "group_id": 9, "new": true, "default": true, "desc": "#4C4B81", "x": 19, "y": 3, "r": 76, "g": 75, "b": 129, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "B1530", "name": "B1530", "color": "B1530", "group_id": 9, "new": true, "default": true, "desc": "#2B354D", "x": 19, "y": 5, "r": 43, "g": 53, "b": 77, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "N0134", "name": "N0134", "color": "N0134", "group_id": 9, "new": true, "default": true, "desc": "#EEEDEF", "x": 19, "y": 0, "r": 238, "g": 237, "b": 239, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0},
-  {"id": "N0224", "name": "N0224", "color": "N0224", "group_id": 9, "new": true, "default": true, "desc": "#EBDADE", "x": 19, "y": 2, "r": 235, "g": 218, "b": 222, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0}
+  {"id": "N0953", "name": "N0953", "color": "N0953", "group_id": 8, "new": false, "default": true, "desc": "#848487", "x": 6, "y": 0, "r": 132, "g": 132, "b": 135, "vp3": 0, "vp2": 0, "vp1": 0, "vn3": 0, "vn2": 0, "vn1": 0}
 ]

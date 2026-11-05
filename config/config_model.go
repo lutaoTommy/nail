@@ -12,6 +12,7 @@ type Config struct {
 	OssAccessKeyId     string `json:"oss_access_key_id"`
 	OssAccessKeySecret string `json:"oss_access_key_secret"`
 	OssBucket          string `json:"oss_bucket"`
+	OssDomain          string `json:"oss_domain"` /*访问域名，如 https://xxx.oss-cn-shanghai.aliyuncs.com */
 	/*邮件（阿里云 DirectMail）*/
 	MailEndpoint        string `json:"mail_endpoint"` /*如 dm.aliyuncs.com */
 	MailAccessKeyId     string `json:"mail_access_key_id"`
@@ -23,9 +24,9 @@ type Config struct {
 	/*Google Sign-In：access_token 对应 OAuth Client ID 列表（tokeninfo aud/azp），逗号分隔多个*/
 	GoogleOAuthClientIDs []string `json:"-"`
 	/*Sign in with Apple*/
-	AppleTeamID      string   `json:"-"`
-	AppleKeyID       string   `json:"-"`
-	AppleAuthKeyPath string   `json:"-"`
+	AppleTeamID         string   `json:"-"`
+	AppleKeyID          string   `json:"-"`
+	AppleAuthKeyPath    string   `json:"-"`
 	AppleClientIDs      []string `json:"-"` // 原生 App Bundle ID（identity token 的 aud）
 	AppleServicesIDs    []string `json:"-"` // Web OAuth Services ID（浏览器回调 id_token 的 aud）
 	AppleDeepLinkScheme string   `json:"-"` // OAuth 回调后跳回 App，如 tintashift

@@ -118,4 +118,9 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_ANTI_FAKE_CODE_NOT_ACTIVATED"] = "防伪码未激活，无法验证"
 	languageMapZhcn["E_ANTI_FAKE_CODE_VERIFIED_BY_OTHER"] = "该防伪码已被其他用户验证"
 	languageMapZhcn["E_NO_ANTI_FAKE_CODE"] = "防伪码不存在"
+	/*circle/topic*/
+	languageMapZhcn["E_INVALID_VIDEO"] = "请上传正确的视频(MP4/MOV)"
+	languageMapZhcn["E_INVALID_REVIEW_STATUS"] = "审核状态不合法"
+	languageMapZhcn["E_NO_TOPIC"] = "无此话题"
+	languageMapZhcn["E_TOPIC_EXIST"] = "话题已存在"
 }

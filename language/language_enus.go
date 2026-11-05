@@ -118,4 +118,9 @@ func initLanguageEnus() {
 	languageMapEn["E_ANTI_FAKE_CODE_NOT_ACTIVATED"] = "Anti-fake code not activated, cannot verify"
 	languageMapEn["E_ANTI_FAKE_CODE_VERIFIED_BY_OTHER"] = "This anti-fake code has been verified by another user"
 	languageMapEn["E_NO_ANTI_FAKE_CODE"] = "Anti-fake code not found"
+	/*circle/topic*/
+	languageMapEn["E_INVALID_VIDEO"] = "Please upload a valid video (MP4/MOV)"
+	languageMapEn["E_INVALID_REVIEW_STATUS"] = "Invalid review status"
+	languageMapEn["E_NO_TOPIC"] = "No this topic"
+	languageMapEn["E_TOPIC_EXIST"] = "Topic already exists"
 }

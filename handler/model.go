@@ -7,20 +7,23 @@ import (
 
 /*通用入参*/
 type Params struct {
-	Id      string `json:"id"`
-	Mac     string `json:"mac"`
-	Desc    string `json:"desc"`
-	Name    string `json:"name"`
-	Phone   string `json:"phone"`
-	Email   string `json:"email"`
-	Content string `json:"content"`
-	Page    int    `json:"page"`
-	Count   int    `json:"count"`
-	Index   int    `json:"index"`
-	Total   int64  `json:"total"`
-	Limit   int    `json:"limit"`
-	Token   string `json:"token"`
-	UserId  string `json:"user_id"`
+	Id           string `json:"id"`
+	Mac          string `json:"mac"`
+	Desc         string `json:"desc"`
+	Name         string `json:"name"`
+	Phone        string `json:"phone"`
+	Email        string `json:"email"`
+	Content      string `json:"content"`
+	Keyword      string `json:"keyword"`
+	Topic        string `json:"topic"`
+	ReviewStatus string `json:"review_status"`
+	Page         int    `json:"page"`
+	Count        int    `json:"count"`
+	Index        int    `json:"index"`
+	Total        int64  `json:"total"`
+	Limit        int    `json:"limit"`
+	Token        string `json:"token"`
+	UserId       string `json:"user_id"`
 }
 
 /*字段检查*/

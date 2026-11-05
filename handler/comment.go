@@ -157,7 +157,7 @@ func removeComment(params *Params) error {
 	if err := db.Where("id = ?", params.Id).First(&comment).Error; err != nil {
 		return newError(404, "E_NO_COMMENT")
 	}
-	if comment.UserId != userInfo.UserId {
+	if comment.UserId != userInfo.UserId && userInfo.UserId != ADMIN {
 		return newError(403, "E_NO_AUTH")
 	}
 	return db.Transaction(func(tx *gorm.DB) error {

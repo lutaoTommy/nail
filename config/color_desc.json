@@ -6,6 +6,5 @@
   {"id": 5, "name": "青", "color": "Cyan", "no": 6},
   {"id": 6, "name": "蓝", "color": "Blue", "no": 7},
   {"id": 7, "name": "紫", "color": "Purple", "no": 8},
-  {"id": 8, "name": "无彩", "color": "Neutral", "no": 9},
-  {"id": 9, "name": "荣耀亲选", "color": "Rongyao", "no": 1}
+  {"id": 8, "name": "无彩", "color": "Neutral", "no": 9}
 ]

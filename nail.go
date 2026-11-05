@@ -47,6 +47,8 @@ func main() {
 	app.PartyFunc("/service", handler.ServiceHandler)
 	app.PartyFunc("/voice", handler.VoiceHandler)
 	app.PartyFunc("/anti-fake", handler.AntiFakeHandler)
+	app.PartyFunc("/topic", handler.TopicHandler)
+	app.PartyFunc("/callback", handler.CallbackHandler)
 	/*日志初始化*/
 	logger.InitLogger()
 	/*多语言初始化*/

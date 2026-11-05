@@ -117,8 +117,13 @@ func getMysqlConn(database string) *gorm.DB {
 		&handler.Suggest{}, &handler.SuggestImage{}, &handler.SensitiveWord{}, &handler.Follow{},
 		&handler.OtaVersion{}, &handler.ColorDesc{}, &handler.PostColor{}, &handler.ColorFavorite{}, &handler.ColorHistory{}, &handler.LutData{},
 		&handler.ApkVersion{}, &handler.PointRecord{}, &handler.CheckinRecord{}, &handler.AntiFakeCode{},
+		&handler.Topic{}, &handler.AuditLog{},
 	)
 	if err != nil {
+		panic(err)
+	}
+	/*存量圈子媒体默认为图片*/
+	if err := mysqlSession.Exec("UPDATE post_images SET media_type = 'image' WHERE media_type = '' OR media_type IS NULL").Error; err != nil {
 		panic(err)
 	}
 	return mysqlSession
