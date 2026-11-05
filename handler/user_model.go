@@ -16,6 +16,7 @@ type User struct {
 	UserId          string         `gorm:"primaryKey;column:user_id;size:20" json:"user_id"`
 	Nickname        string         `gorm:"column:nickname;size:100" json:"nickname"`
 	Email           string         `gorm:"column:email;size:100" json:"email"`
+	Language        string         `gorm:"column:language;size:5" json:"language"`
 	AvatarObjectKey string         `gorm:"column:avatar_object_key;size:200" json:"-"`
 	Biography       string         `gorm:"column:biography;size:200" json:"biography"`
 	CertTime        string         `gorm:"column:cert_time;size:20" json:"cert_time"`

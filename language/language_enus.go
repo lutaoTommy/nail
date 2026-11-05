@@ -103,4 +103,19 @@ func initLanguageEnus() {
 	languageMapEn["E_NO_COLLECT"] = "Not collected"
 	/*ota*/
 	languageMapEn["E_NO_VERSION"] = "Please enter the version"
+	/*checkin/point*/
+	languageMapEn["E_ALREADY_CHECKIN"] = "Already checked in today"
+	/*voice*/
+	languageMapEn["E_NO_VOICE_TEXT"] = "Please enter a voice command"
+	languageMapEn["V_UNKNOWN_COMMAND"] = "Unknown voice command"
+	/*anti-fake*/
+	languageMapEn["E_INVALID_PRODUCT_MODEL"] = "Invalid product model format (2 alphanumeric characters required)"
+	languageMapEn["E_INVALID_BATCH"] = "Invalid batch format (6 alphanumeric characters required)"
+	languageMapEn["E_INVALID_NUMBER"] = "Invalid number format (2 alphanumeric characters required)"
+	languageMapEn["E_INVALID_ANTI_FAKE_CODE"] = "Invalid anti-fake code format (24 alphanumeric characters required)"
+	languageMapEn["E_GENERATE_CODE_FAILED"] = "Failed to generate anti-fake code"
+	languageMapEn["E_ANTI_FAKE_CODE_ACTIVATED"] = "Anti-fake code already activated"
+	languageMapEn["E_ANTI_FAKE_CODE_NOT_ACTIVATED"] = "Anti-fake code not activated, cannot verify"
+	languageMapEn["E_ANTI_FAKE_CODE_VERIFIED_BY_OTHER"] = "This anti-fake code has been verified by another user"
+	languageMapEn["E_NO_ANTI_FAKE_CODE"] = "Anti-fake code not found"
 }

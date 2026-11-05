@@ -21,4 +21,5 @@ type FollowOut struct {
 	FollowCount int    `json:"followCount"`
 	FansCount   int    `json:"fansCount"`
 	PostCount   int    `json:"postCount"`
+	IsFollowed  bool   `json:"is_followed"` // 我是否关注了此人
 }

@@ -50,9 +50,38 @@ type ColorOut struct {
 /*颜色信息*/
 type ColorDesc struct {
 	Id         int    `gorm:"primaryKey;column:id;" json:"id"`
+	No         int    `gorm:"column:no;type:int" json:"no"` /* 排序号，查询时按此字段排序 */
 	Name       string `gorm:"column:name;size:30" json:"name"`
 	Color      string `gorm:"column:color;size:30" json:"color"`
 	CreateTime string `gorm:"column:create_time;size:20" json:"create_time"`
+}
+
+/*颜色信息（附带当前用户是否收藏）*/
+type ColorOutWithFavorite struct {
+	ColorOut
+	Favorite bool `json:"favorite"`
+}
+
+/*图片颜色识别：匹配到的色库颜色*/
+type ColorRecognitionMatch struct {
+	Id   string `json:"id"`   /* colors 表颜色 id，如 R0338 */
+	Name string `json:"name"` /* 颜色名称 */
+	X    int    `json:"x"`    /* 色板坐标 */
+	Y    int    `json:"y"`
+	R    uint8  `json:"r"` /* 库中颜色 RGB */
+	G    uint8  `json:"g"`
+	B    uint8  `json:"b"`
+	Desc string `json:"desc"` /* 库中 hex，如 #FEB3AA */
+}
+
+/*图片颜色识别结果*/
+type ColorRecognitionOut struct {
+	R          uint8                  `json:"r"` /* 图片识别的平均 RGB */
+	G          uint8                  `json:"g"`
+	B          uint8                  `json:"b"`
+	Color      string                 `json:"color"`      /* 图片识别的 #RRGGBB */
+	Percentage float64                `json:"percentage"` /* 0~1 占比 */
+	Match      *ColorRecognitionMatch `json:"match"`      /* colors 表中最接近的颜色，palette 为空时为 nil */
 }
 
 /*根据文本解析颜色：位号 + 颜色 id + 换色位置 1-5*/

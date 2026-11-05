@@ -1,5 +1,7 @@
 package handler
 
+import "unicode/utf8"
+
 /*建议信息*/
 type Suggest struct {
 	Id       string `gorm:"primaryKey;column:id;size:20" json:"id"`
@@ -57,8 +59,10 @@ func (suggest Suggest) checkContent() error {
 	var err error
 	if suggest.Content == "" {
 		err = newError(400, "E_NO_CONTENT")
-	} else if len(suggest.Content) > 500 {
+	} else if utf8.RuneCountInString(suggest.Content) > 500 {
 		err = newError(400, "E_TOO_LONG")
+	} else {
+		err = checkSensitiveContent(suggest.Content)
 	}
 	return err
 }

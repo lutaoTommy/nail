@@ -39,6 +39,18 @@ func InitTrie() {
 	}
 }
 
+/*检查内容中的敏感词*/
+func checkSensitiveContent(content string) error {
+	if trie == nil || content == "" {
+		return nil
+	}
+	words := trie.Check(content)
+	if len(words) > 0 {
+		return newSensitiveWordError(words)
+	}
+	return nil
+}
+
 /*敏感词添加*/
 func addWordHandler(ctx iris.Context) {
 	var err error

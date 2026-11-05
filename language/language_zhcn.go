@@ -103,4 +103,19 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_NO_COLLECT"] = "未收藏过"
 	/*ota*/
 	languageMapZhcn["E_NO_VERSION"] = "请填写版本"
+	/*checkin/point*/
+	languageMapZhcn["E_ALREADY_CHECKIN"] = "今日已签到"
+	/*voice*/
+	languageMapZhcn["E_NO_VOICE_TEXT"] = "请输入语音指令"
+	languageMapZhcn["V_UNKNOWN_COMMAND"] = "未识别的语音指令"
+	/*anti-fake*/
+	languageMapZhcn["E_INVALID_PRODUCT_MODEL"] = "产品型号格式错误（需2位字母或数字）"
+	languageMapZhcn["E_INVALID_BATCH"] = "生产批次格式错误（需6位字母或数字）"
+	languageMapZhcn["E_INVALID_NUMBER"] = "编号格式错误（需2位字母或数字）"
+	languageMapZhcn["E_INVALID_ANTI_FAKE_CODE"] = "防伪码格式错误（需24位字母或数字）"
+	languageMapZhcn["E_GENERATE_CODE_FAILED"] = "防伪码生成失败"
+	languageMapZhcn["E_ANTI_FAKE_CODE_ACTIVATED"] = "防伪码已激活"
+	languageMapZhcn["E_ANTI_FAKE_CODE_NOT_ACTIVATED"] = "防伪码未激活，无法验证"
+	languageMapZhcn["E_ANTI_FAKE_CODE_VERIFIED_BY_OTHER"] = "该防伪码已被其他用户验证"
+	languageMapZhcn["E_NO_ANTI_FAKE_CODE"] = "防伪码不存在"
 }

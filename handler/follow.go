@@ -190,6 +190,133 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(data) > 0 {
+		ids := make([]string, len(data))
+		for i, u := range data {
+			ids[i] = u.FollowingID
+		}
+		var followedIds []string
+		getMysqlConn().Table("follows").Select("following_id").Where("follower_id = ? AND following_id IN ? AND status = 1", userInfo.UserId, ids).Pluck("following_id", &followedIds)
+		followedSet := make(map[string]bool, len(followedIds))
+		for _, id := range followedIds {
+			followedSet[id] = true
+		}
+		for i := range data {
+			data[i].IsFollowed = followedSet[data[i].FollowingID]
+		}
+	}
+	signFollowAvatars(data)
+	return data, nil
+}
+
+/*查询粉丝列表*/
+func userFansListHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	params.Page = AtoUI(ctx.URLParam("page"), 0)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
+	if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	data, err := userFansList(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+	}
+}
+
+/*查询粉丝列表*/
+func userFansList(params *Params) ([]FollowOut, error) {
+	db := getMysqlConn()
+	var userInfo User
+	err := db.Where("token = ?", params.Token).First(&userInfo).Error
+	if err != nil {
+		return nil, newError(401, "E_NO_TOKEN")
+	}
+	db = db.Select("follows.id, follows.follower_id as following_id, follows.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
+		Table("follows").
+		Joins("left join users on follows.follower_id = users.user_id").
+		Where("follows.status = ?", 1).
+		Where("follows.following_id = ?", userInfo.UserId)
+
+	err = db.Count(&params.Total).Error
+	if err != nil {
+		return nil, err
+	}
+	data := []FollowOut{}
+	if params.Page > 0 {
+		db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	}
+	err = db.Order("follow_time desc").Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	signFollowAvatars(data)
+	return data, nil
+}
+
+/*查询互相关注列表*/
+func userMutualFollowListHandler(ctx iris.Context) {
+	var err error
+	var params Params
+	params.Token = ctx.GetHeader("token")
+	params.Page = AtoUI(ctx.URLParam("page"), 0)
+	params.Limit = AtoUI(ctx.URLParam("limit"), 10)
+	if params.Token == "" {
+		err = newError(401, "E_NO_TOKEN")
+	}
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	data, err := userMutualFollowList(&params)
+	if err == nil {
+		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
+	} else {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+	}
+}
+
+/*查询互相关注列表*/
+func userMutualFollowList(params *Params) ([]FollowOut, error) {
+	db := getMysqlConn()
+	var userInfo User
+	err := db.Where("token = ?", params.Token).First(&userInfo).Error
+	if err != nil {
+		return nil, newError(401, "E_NO_TOKEN")
+	}
+	db = db.Select("f1.id, f1.following_id, f1.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count, 1 as is_followed").
+		Table("follows f1").
+		Joins("inner join follows f2 on f1.follower_id = f2.following_id and f1.following_id = f2.follower_id").
+		Joins("left join users on f1.following_id = users.user_id").
+		Where("f1.follower_id = ?", userInfo.UserId).
+		Where("f1.status = ?", 1).
+		Where("f2.status = ?", 1)
+
+	err = db.Count(&params.Total).Error
+	if err != nil {
+		return nil, err
+	}
+	data := []FollowOut{}
+	if params.Page > 0 {
+		db = db.Offset((params.Page - 1) * params.Limit).Limit(params.Limit)
+	}
+	err = db.Order("f1.follow_time desc").Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	signFollowAvatars(data)
+	return data, nil
+}
+
+/*转换关注列表头像为可访问的签名地址*/
+func signFollowAvatars(data []FollowOut) {
 	for i := range data {
 		if data[i].Avatar == "" {
 			continue
@@ -198,5 +325,4 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 			data[i].Avatar = u
 		}
 	}
-	return data, nil
 }

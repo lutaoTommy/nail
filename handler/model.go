@@ -2,6 +2,7 @@ package handler
 
 import (
 	"regexp"
+	"unicode/utf8"
 )
 
 /*通用入参*/
@@ -27,13 +28,10 @@ func (params Params) checkContent() error {
 	if params.Content == "" {
 		return newError(400, "E_NO_CONTENT")
 	}
-	if len(params.Content) > 500 {
+	if utf8.RuneCountInString(params.Content) > 500 {
 		return newError(400, "E_TOO_LONG")
 	}
-	if sensitiveWord := trie.Check(params.Content); len(sensitiveWord) > 0 {
-		return newSensitiveWordError(sensitiveWord)
-	}
-	return nil
+	return checkSensitiveContent(params.Content)
 }
 
 /*通用入参*/

@@ -1,9 +1,16 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"image"
+	"io"
+	"math"
+	"nail/nlu"
 	"nail/parser"
+	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +40,8 @@ func ColorHandler(color iris.Party) {
 	color.Post("/history/remove", removeColorHistoryHandler)
 	color.Get("/history/list", listColorHistoryHandler)
 	color.Get("/history/group", groupColorHistoryHandler)
+	/*图片颜色识别*/
+	color.Post("/recognition", colorRecognitionHandler)
 }
 
 /*查询色系*/
@@ -73,7 +82,7 @@ func descColor(params *Params) ([]ColorDesc, error) {
 		return nil, err
 	}
 	data := []ColorDesc{}
-	err = db.Find(&data).Error
+	err = db.Order("no").Find(&data).Error
 	return data, err
 }
 
@@ -101,28 +110,61 @@ func listColorHandler(ctx iris.Context) {
 }
 
 /*查询颜色*/
-func listColor(params *Params) ([]ColorOut, error) {
-	db := getMysqlConn()
+func listColor(params *Params) ([]ColorOutWithFavorite, error) {
+	baseDB := getMysqlConn()
 	var userInfo User
-	err := db.Where("token = ?", params.Token).First(&userInfo).Error
+	err := baseDB.Where("token = ?", params.Token).First(&userInfo).Error
 	if err != nil {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
-	db = db.Table("colors")
-	db = db.Where("count = ?", params.Count)
+	colorDB := baseDB.Table("colors")
+	colorDB = colorDB.Where("count = ?", params.Count)
 	if params.Index > 0 {
-		db = db.Where("group_id = ?", params.Index)
+		colorDB = colorDB.Where("group_id = ?", params.Index)
 	}
 	if params.Name != "" {
-		db = db.Where("name like ?", fmt.Sprintf("%%%s%%", params.Name))
+		colorDB = colorDB.Where("name like ?", fmt.Sprintf("%%%s%%", params.Name))
 	}
-	err = db.Count(&params.Total).Error
+	err = colorDB.Count(&params.Total).Error
 	if err != nil {
 		return nil, err
 	}
 	colorList := []ColorOut{}
-	err = db.Find(&colorList).Error
-	return colorList, err
+	if err := colorDB.Find(&colorList).Error; err != nil {
+		return nil, err
+	}
+	if len(colorList) == 0 {
+		return []ColorOutWithFavorite{}, nil
+	}
+
+	colorIds := make([]string, 0, len(colorList))
+	for _, c := range colorList {
+		if c.Id != "" {
+			colorIds = append(colorIds, c.Id)
+		}
+	}
+	favSet := map[string]bool{}
+	if len(colorIds) > 0 {
+		var favIds []string
+		if err := baseDB.Model(&ColorFavorite{}).
+			Where("user_id = ? AND color_id IN ?", userInfo.UserId, colorIds).
+			Pluck("color_id", &favIds).Error; err != nil {
+			return nil, err
+		}
+		favSet = make(map[string]bool, len(favIds))
+		for _, id := range favIds {
+			favSet[id] = true
+		}
+	}
+
+	out := make([]ColorOutWithFavorite, 0, len(colorList))
+	for _, c := range colorList {
+		out = append(out, ColorOutWithFavorite{
+			ColorOut: c,
+			Favorite: favSet[c.Id],
+		})
+	}
+	return out, nil
 }
 
 /*根据用户输入文本解析：返回位号和颜色 id*/
@@ -730,4 +772,249 @@ func buildColorHistoryOut(db *gorm.DB, rows []ColorHistory) ([]ColorHistoryOut, 
 		}
 	}
 	return result, nil
+}
+
+/*初始化语音指令中的颜色关键词*/
+func InitColorTriggers() {
+	db := getMysqlConn()
+	var colors []Color
+	if err := db.Table("colors").Select("name, color").Where("count = ?", 61).Find(&colors).Error; err != nil {
+		return
+	}
+	names := make([]string, 0, len(colors)*2)
+	for _, c := range colors {
+		names = append(names, c.Name)
+		if c.Color != "" {
+			names = append(names, c.Color)
+		}
+	}
+	nlu.AddColorTriggers(names)
+}
+
+/*图片颜色识别：上传图片，返回图中占比最高的几种颜色 count：返回前 N 种颜色，默认 5，范围 1~20*/
+func colorRecognitionHandler(ctx iris.Context) {
+	token := ctx.GetHeader("token")
+	if token == "" {
+		err := newError(401, "E_NO_TOKEN")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	db := getMysqlConn()
+	var userInfo User
+	if err := db.Where("token = ?", token).First(&userInfo).Error; err != nil {
+		err = newError(401, "E_NO_TOKEN")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	count := AtoUI(ctx.URLParam("count"), 5)
+	if count < 1 {
+		count = 1
+	} else if count > 20 {
+		count = 20
+	}
+	file, _, err := ctx.FormFile("image")
+	if err != nil {
+		err = newError(400, "E_INVALID_PICTURE")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	defer file.Close()
+	fileBytes, err := io.ReadAll(file)
+	if err != nil || len(fileBytes) == 0 {
+		err = newError(400, "E_INVALID_PICTURE")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	if cType := http.DetectContentType(fileBytes); cType != JPEG && cType != PNG {
+		err = newError(400, "E_INVALID_PICTURE")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	img, err := parseImageData(bytes.NewBuffer(fileBytes))
+	if err != nil {
+		err = newError(400, "E_INVALID_PICTURE")
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	/*加载 colors 表全部颜色，用于识别结果匹配最近色*/
+	var palette []Color
+	if err := db.Table("colors").Select("id, name, r, g, b, x, y, `desc`").Find(&palette).Error; err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	data, err := analyzeImageColors(img, count, palette)
+	if err != nil {
+		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
+		return
+	}
+	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "data": data})
+}
+
+/*在 palette 中找 RGB 欧氏距离最近的颜色，palette 为空返回 nil*/
+func matchNearestPaletteColor(r, g, b uint8, palette []Color) *Color {
+	var best *Color
+	var bestDist2 int64
+	for i := range palette {
+		c := &palette[i]
+		dr := int64(r) - int64(c.R)
+		dg := int64(g) - int64(c.G)
+		db := int64(b) - int64(c.B)
+		d2 := dr*dr + dg*dg + db*db
+		if best == nil || d2 < bestDist2 {
+			best = c
+			bestDist2 = d2
+		}
+	}
+	return best
+}
+
+/*
+分析图片颜色：缩放到最长边 200px 采样，按每通道 4bit 量化分桶合并相近色；
+匹配 colors 表（palette）最近色，同一库颜色的条目合并去重，返回占比最高的前 count 种颜色
+*/
+func analyzeImageColors(img image.Image, count int, palette []Color) ([]ColorRecognitionOut, error) {
+	bounds := img.Bounds()
+	w, h := bounds.Dx(), bounds.Dy()
+	if w == 0 || h == 0 {
+		return nil, newError(400, "E_INVALID_PICTURE")
+	}
+	/*大图缩放采样，加速统计*/
+	if maxSide := max(w, h); maxSide > 200 {
+		scale := maxSide / 200
+		if scale < 1 {
+			scale = 1
+		}
+		resized, err := resizeImg(img, uint(w/scale), uint(h/scale))
+		if err != nil {
+			return nil, err
+		}
+		img = resized
+		bounds = img.Bounds()
+	}
+	/*量化分桶：key 为每通道高 4bit，桶内累加原始 RGB 与像素数*/
+	type colorBucket struct {
+		r, g, b uint64
+		count   int
+	}
+	buckets := make(map[uint16]*colorBucket)
+	total := 0
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r16, g16, b16, a16 := img.At(x, y).RGBA()
+			if a16 == 0 {
+				continue
+			}
+			r, g, b := uint8(r16>>8), uint8(g16>>8), uint8(b16>>8)
+			key := uint16(r>>4)<<8 | uint16(g>>4)<<4 | uint16(b>>4)
+			if bucket, ok := buckets[key]; ok {
+				bucket.r += uint64(r)
+				bucket.g += uint64(g)
+				bucket.b += uint64(b)
+				bucket.count++
+			} else {
+				buckets[key] = &colorBucket{r: uint64(r), g: uint64(g), b: uint64(b), count: 1}
+			}
+			total++
+		}
+	}
+	if total == 0 {
+		return nil, newError(400, "E_INVALID_PICTURE")
+	}
+	/*按像素数降序排序*/
+	list := make([]*colorBucket, 0, len(buckets))
+	for _, bucket := range buckets {
+		list = append(list, bucket)
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].count > list[j].count
+	})
+	/*合并相近色：平均 RGB 欧氏距离不超过 32 视为同一种颜色（消除量化桶边界割裂）*/
+	const similarColorDistance2 = 32 * 32
+	merged := make([]*colorBucket, 0, len(list))
+	for _, bucket := range list {
+		r := bucket.r / uint64(bucket.count)
+		g := bucket.g / uint64(bucket.count)
+		b := bucket.b / uint64(bucket.count)
+		isMerged := false
+		for _, m := range merged {
+			mr := m.r / uint64(m.count)
+			mg := m.g / uint64(m.count)
+			mb := m.b / uint64(m.count)
+			dr, dg, db := int64(r)-int64(mr), int64(g)-int64(mg), int64(b)-int64(mb)
+			if dr*dr+dg*dg+db*db <= similarColorDistance2 {
+				m.r += bucket.r
+				m.g += bucket.g
+				m.b += bucket.b
+				m.count += bucket.count
+				isMerged = true
+				break
+			}
+		}
+		if !isMerged {
+			merged = append(merged, bucket)
+		}
+	}
+	/*合并后桶大小会变化，重新按像素数降序排序，保证占比高的在前*/
+	sort.Slice(merged, func(i, j int) bool {
+		return merged[i].count > merged[j].count
+	})
+	/*匹配 colors 表最近色：同一库颜色的条目合并去重（占比相加），保留首条（占比最高）的图片 RGB*/
+	type matchedBucket struct {
+		r, g, b uint8
+		count   int
+		match   *ColorRecognitionMatch
+	}
+	results := make([]*matchedBucket, 0, len(merged))
+	for _, bucket := range merged {
+		r := uint8(bucket.r / uint64(bucket.count))
+		g := uint8(bucket.g / uint64(bucket.count))
+		b := uint8(bucket.b / uint64(bucket.count))
+		m := matchNearestPaletteColor(r, g, b, palette)
+		isMerged := false
+		if m != nil {
+			for _, res := range results {
+				if res.match != nil && res.match.Id == m.Id {
+					res.count += bucket.count
+					isMerged = true
+					break
+				}
+			}
+		}
+		if !isMerged {
+			var match *ColorRecognitionMatch
+			if m != nil {
+				match = &ColorRecognitionMatch{
+					Id:   m.Id,
+					Name: m.Name,
+					X:    m.X,
+					Y:    m.Y,
+					R:    uint8(m.R),
+					G:    uint8(m.G),
+					B:    uint8(m.B),
+					Desc: m.Desc,
+				}
+			}
+			results = append(results, &matchedBucket{r: r, g: g, b: b, count: bucket.count, match: match})
+		}
+	}
+	/*匹配合并后占比变化，再按像素数降序排一次并截断前 count 个*/
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].count > results[j].count
+	})
+	if len(results) > count {
+		results = results[:count]
+	}
+	/*占比保留 4 位小数*/
+	data := make([]ColorRecognitionOut, 0, len(results))
+	for _, res := range results {
+		data = append(data, ColorRecognitionOut{
+			R:          res.r,
+			G:          res.g,
+			B:          res.b,
+			Color:      fmt.Sprintf("#%02X%02X%02X", res.r, res.g, res.b),
+			Percentage: math.Round(float64(res.count)/float64(total)*10000) / 10000,
+			Match:      res.match,
+		})
+	}
+	return data, nil
 }

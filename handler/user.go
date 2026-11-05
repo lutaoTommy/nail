@@ -47,6 +47,18 @@ func UserHandler(user iris.Party) {
 	user.Post("/follow/cancel", cancelFollowHandler)
 	/*关注列表*/
 	user.Get("/follow/list", userFollowListHandler)
+	/*粉丝列表*/
+	user.Get("/fans/list", userFansListHandler)
+	/*互相关注列表*/
+	user.Get("/follow/mutual", userMutualFollowListHandler)
+	/*签到*/
+	user.Post("/checkin", checkinHandler)
+	/*签到状态*/
+	user.Get("/checkin/status", checkinStatusHandler)
+	/*积分汇总*/
+	user.Get("/point/summary", pointSummaryHandler)
+	/*积分记录*/
+	user.Get("/point/list", pointListHandler)
 }
 
 /*注册获取邮箱验证码*/
@@ -377,7 +389,7 @@ func userLoginHandler(ctx iris.Context) {
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
-	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": user.Token})
+	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": user.Token, "user_id": user.UserId})
 }
 
 /*网页登录*/
@@ -398,6 +410,7 @@ func userLogin(user *User) error {
 		return newError(400, "E_INVALID_PWD")
 	}
 	user.Token = userInfo.Token
+	user.UserId = userInfo.UserId
 	return nil
 }
 
@@ -426,7 +439,7 @@ func mailLoginHandler(ctx iris.Context) {
 		return
 	}
 	RecordLoginSuccess(ip, accKey)
-	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": user.Token})
+	ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "token": user.Token, "user_id": user.UserId})
 }
 
 /*邮箱登录*/
@@ -459,6 +472,7 @@ func mailLogin(user *User) error {
 		return err
 	}
 	user.Token = newTk
+	user.UserId = userInfo.UserId
 	return nil
 }
 
@@ -498,10 +512,22 @@ func updateUserInfo(user *User) error {
 		if len(user.Nickname) > 100 {
 			return newError(400, "E_TOO_LONG")
 		}
+		if err := checkSensitiveContent(user.Nickname); err != nil {
+			return err
+		}
 		data["nickname"] = user.Nickname
+	}
+	if user.Language != "" {
+		if len(user.Language) > 5 {
+			return newError(400, "E_TOO_LONG")
+		}
+		data["language"] = user.Language
 	}
 	if len(user.Biography) > 200 {
 		return newError(400, "E_TOO_LONG")
+	}
+	if err := checkSensitiveContent(user.Biography); err != nil {
+		return err
 	}
 	data["biography"] = user.Biography
 	return db.Model(&User{}).Where("user_id = ?", userInfo.UserId).Updates(data).Error
@@ -598,6 +624,7 @@ func getUserInfoHandler(ctx iris.Context) {
 			"user_id":      user.UserId,
 			"avatar":       avatarURL,
 			"nickname":     user.Nickname,
+			"language":     user.Language,
 			"biography":    user.Biography,
 			"follow_count": user.FollowCount,
 			"fans_count":   user.FansCount,

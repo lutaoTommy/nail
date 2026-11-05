@@ -45,12 +45,16 @@ func main() {
 	app.PartyFunc("/comment", handler.CommentHandler)
 	app.PartyFunc("/suggest", handler.SuggestHandler)
 	app.PartyFunc("/service", handler.ServiceHandler)
+	app.PartyFunc("/voice", handler.VoiceHandler)
+	app.PartyFunc("/anti-fake", handler.AntiFakeHandler)
 	/*日志初始化*/
 	logger.InitLogger()
 	/*多语言初始化*/
 	language.InitLanguage()
 	/*初始化Tire树*/
 	handler.InitTrie()
+	/*语音指令颜色关键词*/
+	handler.InitColorTriggers()
 	app.Run(iris.Addr(fmt.Sprintf(":%d", config.GetHttpPort())), iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
 	}))
