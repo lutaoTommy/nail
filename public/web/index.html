@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TINTAShift · 管理后台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/web/styles.css" />
+</head>
+<body>
+  <!-- 登录页 -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-mark"></div>
+        <h1>TINTAShift</h1>
+        <p>管理后台</p>
+      </div>
+      <form id="loginForm" class="login-form active">
+        <label for="loginAccount">管理员账号</label>
+        <input type="text" id="loginAccount" placeholder="请输入管理员账号" autocomplete="username" required />
+        <label for="loginPassword">密码</label>
+        <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password" required />
+        <button type="submit" class="btn-primary">登录</button>
+      </form>
+      <p id="loginError" class="login-error" style="display: none;"></p>
+    </div>
+  </div>
+
+  <!-- 主界面 -->
+  <div class="app" id="app" style="display: none;">
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="brand-dot"></span>
+        <strong>TINTAShift</strong>
+        <span class="subtitle">管理后台</span>
+      </div>
+      <button class="icon-btn" id="logoutBtn" title="退出登录">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+    </header>
+
+    <main class="page-scroll">
+      <!-- Tab 导航 -->
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" class="view-tab active" data-view="review">朋友圈审核</button>
+        <button type="button" class="view-tab" data-view="topic">话题管理</button>
+        <button type="button" class="view-tab" data-view="suggest">建议管理</button>
+        <button type="button" class="view-tab" data-view="word">敏感词管理</button>
+      </div>
+
+      <!-- 朋友圈审核 -->
+      <div id="reviewView">
+        <div class="section-card">
+          <form id="filterForm" class="filter-form">
+            <div class="form-group">
+              <label for="filterReview">审核状态</label>
+              <select id="filterReview">
+                <option value="">全部</option>
+                <option value="0">未审核</option>
+                <option value="1">已审核</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filterKeyword">关键词</label>
+              <input type="text" id="filterKeyword" placeholder="内容 / 话题" />
+            </div>
+            <div class="form-group">
+              <label for="filterTopic">话题</label>
+              <input type="text" id="filterTopic" placeholder="精确匹配话题" />
+            </div>
+            <div class="form-group form-group-btn">
+              <button type="submit" class="btn-search">搜索</button>
+              <button type="button" class="btn-ghost" id="resetBtn">重置</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h3>朋友圈列表</h3>
+            <div class="header-actions">
+              <span class="list-count" id="listCount">0 条记录</span>
+              <button type="button" class="btn-ghost btn-refresh" id="refreshBtn">刷新</button>
+            </div>
+          </div>
+
+          <div id="loadingState" class="state-box" style="display: none;">加载中...</div>
+          <div id="emptyState" class="state-box" style="display: none;">暂无符合条件的动态</div>
+          <div id="postList" class="post-list"></div>
+          <div id="pagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- 话题管理 -->
+      <div id="topicView" style="display: none;">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>添加话题</h3>
+          </div>
+          <form id="topicForm" class="topic-form">
+            <div class="form-group">
+              <label for="topicName">话题名称</label>
+              <input type="text" id="topicName" maxlength="50" placeholder="例如：法式、晕染、猫眼" />
+            </div>
+            <div class="form-group form-group-btn">
+              <button type="submit" class="btn-search">添加话题</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h3>话题列表</h3>
+            <div class="header-actions">
+              <input type="text" id="topicSearch" class="topic-search" placeholder="搜索话题" />
+              <span class="list-count" id="topicCount">0 个话题</span>
+              <button type="button" class="btn-ghost btn-refresh" id="topicRefreshBtn">刷新</button>
+            </div>
+          </div>
+
+          <div id="topicLoading" class="state-box" style="display: none;">加载中...</div>
+          <div id="topicEmpty" class="state-box" style="display: none;">暂无话题</div>
+          <div id="topicList" class="topic-list"></div>
+        </div>
+      </div>
+
+      <!-- 建议管理 -->
+      <div id="suggestView" style="display: none;">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>建议列表</h3>
+            <div class="header-actions">
+              <span class="list-count" id="suggestCount">0 条建议</span>
+              <button type="button" class="btn-ghost btn-refresh" id="suggestRefreshBtn">刷新</button>
+            </div>
+          </div>
+
+          <div id="suggestLoading" class="state-box" style="display: none;">加载中...</div>
+          <div id="suggestEmpty" class="state-box" style="display: none;">暂无建议</div>
+          <div id="suggestList" class="suggest-list"></div>
+          <div id="suggestPagination" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- 敏感词管理 -->
+      <div id="wordView" style="display: none;">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>添加敏感词</h3>
+          </div>
+          <form id="wordForm" class="topic-form">
+            <div class="form-group">
+              <label for="wordName">敏感词</label>
+              <input type="text" id="wordName" maxlength="100" placeholder="输入需要拦截的词语" />
+            </div>
+            <div class="form-group form-group-btn">
+              <button type="submit" class="btn-search">添加敏感词</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h3>敏感词列表</h3>
+            <div class="header-actions">
+              <input type="text" id="wordSearch" class="topic-search" placeholder="搜索敏感词" />
+              <span class="list-count" id="wordCount">0 个敏感词</span>
+              <button type="button" class="btn-ghost btn-refresh" id="wordRefreshBtn">刷新</button>
+            </div>
+          </div>
+
+          <div id="wordLoading" class="state-box" style="display: none;">加载中...</div>
+          <div id="wordEmpty" class="state-box" style="display: none;">暂无敏感词</div>
+          <div id="wordList" class="topic-list"></div>
+          <div id="wordPagination" class="pagination"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 通用确认弹窗 -->
+  <div class="modal-overlay" id="confirmModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="confirmTitle">确认操作</h3>
+        <button type="button" class="modal-close" id="confirmClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmBody"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="confirmCancelBtn">取消</button>
+        <button type="button" class="btn-danger" id="confirmBtn">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 建议详情弹窗 -->
+  <div class="modal-overlay" id="suggestDetailModal" style="display: none;">
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h3>建议详情</h3>
+        <button type="button" class="modal-close" id="suggestDetailClose">&times;</button>
+      </div>
+      <div class="modal-body modal-body-scroll" id="suggestDetailBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="suggestDetailFooterClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" style="display: none;"></div>
+
+  <script src="/web/app.js"></script>
+</body>
+</html>
