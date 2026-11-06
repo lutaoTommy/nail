@@ -120,7 +120,7 @@ func listColor(params *Params) ([]ColorOutWithFavorite, error) {
 	colorDB := baseDB.Table("colors")
 	colorDB = colorDB.Where("count = ?", params.Count)
 	if params.Index > 0 {
-		colorDB = colorDB.Where("group_id = ?", params.Index)
+		colorDB = colorDB.Where("JSON_CONTAINS(group_id, JSON_ARRAY(?))", params.Index)
 	}
 	if params.Name != "" {
 		colorDB = colorDB.Where("name like ?", fmt.Sprintf("%%%s%%", params.Name))

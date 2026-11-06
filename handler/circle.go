@@ -96,7 +96,7 @@ func uploadCircleImageHandler(ctx iris.Context) {
 	if err != nil {
 		err = newError(400, "E_INVALID_PICTURE")
 	} else if c, _, e := image.DecodeConfig(file); e != nil {
-		err = e
+		err = newError(400, "E_INVALID_PICTURE")
 	} else {
 		/*再次读取*/
 		file.Seek(0, 0)

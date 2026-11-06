@@ -80,6 +80,82 @@ func TestColorListHandler_WithDBPhoneTest(t *testing.T) {
 	resp.Value("data").Array().NotEmpty()
 }
 
+// /color/list：一个颜色归属多个色系时，按任一行色系都能查到
+func TestColorListHandler_MultiGroup_WithDBPhoneTest(t *testing.T) {
+	u, plainPwd := prepareTestUser(t)
+	loadConfigOnce(t)
+	db := getMysqlConn()
+
+	const colorID = "T9001"
+	_ = db.Where("id = ?", colorID).Delete(&Color{}).Error
+	color := Color{
+		Id:      colorID,
+		Name:    "多色系测试",
+		Color:   "TEST",
+		Desc:    "#000000",
+		Count:   61,
+		GroupId: []int{1, 7},
+	}
+	if err := db.Save(&color).Error; err != nil {
+		t.Fatalf("insert test color failed: %v", err)
+	}
+	defer db.Where("id = ?", colorID).Delete(&Color{})
+
+	app := newUserAndColorApp()
+	e := httptest.New(t, app)
+
+	login := e.POST("/user/login").
+		WithJSON(iris.Map{
+			"phone":  u.Phone,
+			"passwd": plainPwd,
+		}).
+		Expect().
+		Status(iris.StatusOK).
+		JSON().Object()
+
+	token := login.Value("token").String().Raw()
+
+	for _, index := range []int{1, 7} {
+		resp := e.GET("/color/list").
+			WithHeader("token", token).
+			WithQuery("count", 61).
+			WithQuery("index", index).
+			Expect().
+			Status(iris.StatusOK).
+			JSON().Object()
+
+		resp.Value("result_code").Number().Equal(200)
+		arr := resp.Value("data").Array()
+		found := false
+		for i := 0; i < len(arr.Raw()); i++ {
+			obj := arr.Element(i).Object()
+			if obj.Value("id").String().Raw() == colorID {
+				obj.Value("group_id").Array().Length().Equal(2)
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("expected color id %s in /color/list?index=%d", colorID, index)
+		}
+	}
+
+	resp := e.GET("/color/list").
+		WithHeader("token", token).
+		WithQuery("count", 61).
+		WithQuery("index", 2).
+		Expect().
+		Status(iris.StatusOK).
+		JSON().Object()
+
+	arr := resp.Value("data").Array()
+	for i := 0; i < len(arr.Raw()); i++ {
+		if arr.Element(i).Object().Value("id").String().Raw() == colorID {
+			t.Fatalf("color id %s should not be in /color/list?index=2", colorID)
+		}
+	}
+}
+
 // 收藏：添加 -> 列表 -> 取消
 func TestColorFavorite_Flow_WithDBPhoneTest(t *testing.T) {
 	u, plainPwd := prepareTestUser(t)
