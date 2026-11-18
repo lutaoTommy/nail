@@ -123,4 +123,18 @@ func initLanguageEnus() {
 	languageMapEn["E_INVALID_REVIEW_STATUS"] = "Invalid review status"
 	languageMapEn["E_NO_TOPIC"] = "No this topic"
 	languageMapEn["E_TOPIC_EXIST"] = "Topic already exists"
+	/*activity*/
+	languageMapEn["E_NO_ACTIVITY"] = "Activity not found"
+	languageMapEn["E_NO_TITLE"] = "Please enter title"
+	languageMapEn["E_NO_TIME"] = "Please enter time"
+	languageMapEn["E_ALREADY_JOINED"] = "Already joined this activity"
+	languageMapEn["E_NOT_JOINED"] = "Not joined this activity"
+	languageMapEn["E_ALREADY_VOTED"] = "Already voted"
+	languageMapEn["E_NOT_VOTED"] = "Not voted"
+	/*color/voice*/
+	languageMapEn["E_AI_RECOMMEND_FAILED"] = "Color recommendation service is temporarily unavailable, please try again later"
+	languageMapEn["E_NO_COLOR_NAME"] = "No color name recognized"
+	languageMapEn["V_ACTION_HELP"] = "Unable to recognize command. Try:\n· Change color: change the first to midnight navy"
+	languageMapEn["E_CERT_EXPIRED"] = "Verification code has expired. Please request a new one"
+	registerLocale("en-US", languageMapEn)
 }

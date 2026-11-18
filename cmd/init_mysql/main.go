@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"nail/config"
 	"nail/handler"
+	"nail/language"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -76,6 +78,12 @@ func main() {
 		panic(err)
 	}
 	for i := range colorDescs {
+		/*校验多语言翻译完整，缺失会导致接口回退 en-US*/
+		for _, locale := range language.SupportedLocales() {
+			if strings.TrimSpace(colorDescs[i].Name[locale]) == "" {
+				panic(fmt.Sprintf("config/color_desc.json id=%d 缺少语言 %s 的翻译", colorDescs[i].Id, locale))
+			}
+		}
 		colorDescs[i].CreateTime = now
 		if err = db.Save(&colorDescs[i]).Error; err != nil {
 			panic(err)

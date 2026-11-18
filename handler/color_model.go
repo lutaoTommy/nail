@@ -47,13 +47,22 @@ type ColorOut struct {
 	GroupId []int  `gorm:"column:group_id;serializer:json;type:json" json:"group_id"`
 }
 
-/*颜色信息*/
+/*颜色信息：name 为多语言 map，key 为 locale（见 language/language.md）*/
 type ColorDesc struct {
-	Id         int    `gorm:"primaryKey;column:id;" json:"id"`
-	No         int    `gorm:"column:no;type:int" json:"no"` /* 排序号，查询时按此字段排序 */
-	Name       string `gorm:"column:name;size:30" json:"name"`
-	Color      string `gorm:"column:color;size:30" json:"color"`
-	CreateTime string `gorm:"column:create_time;size:20" json:"create_time"`
+	Id         int               `gorm:"primaryKey;column:id;" json:"id"`
+	No         int               `gorm:"column:no;type:int" json:"no"` /* 排序号，查询时按此字段排序 */
+	Name       map[string]string `gorm:"column:name;serializer:json;type:json" json:"name"`
+	Color      string            `gorm:"column:color;size:30" json:"color"`
+	CreateTime string            `gorm:"column:create_time;size:20" json:"create_time"`
+}
+
+/*色系返回：name 已按请求语言本地化*/
+type ColorDescOut struct {
+	Id         int    `json:"id"`
+	No         int    `json:"no"`
+	Name       string `json:"name"`
+	Color      string `json:"color"`
+	CreateTime string `json:"create_time"`
 }
 
 /*颜色信息（附带当前用户是否收藏）*/

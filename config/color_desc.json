@@ -1,10 +1,10 @@
 [
-  {"id": 1, "name": "红", "color": "Red", "no": 2},
-  {"id": 2, "name": "橙", "color": "Orange", "no": 3},
-  {"id": 3, "name": "黄", "color": "Yellow", "no": 4},
-  {"id": 4, "name": "绿", "color": "Green", "no": 5},
-  {"id": 5, "name": "青", "color": "Cyan", "no": 6},
-  {"id": 6, "name": "蓝", "color": "Blue", "no": 7},
-  {"id": 7, "name": "紫", "color": "Purple", "no": 8},
-  {"id": 8, "name": "无彩", "color": "Neutral", "no": 9}
+  {"id": 1, "color": "Red", "no": 2, "name": {"zh-CN": "红", "en-US": "Red", "zh-Hant": "紅", "ja-JP": "赤", "ko-KR": "빨간색", "es-ES": "Rojo", "de-DE": "Rot", "fr-FR": "Rouge", "it-IT": "Rosso", "pt-PT": "Vermelho", "pl-PL": "Czerwony", "ru-RU": "Красный", "vi-VN": "Đỏ", "th-TH": "แดง", "ms-MY": "Merah", "ar": "أحمر"}},
+  {"id": 2, "color": "Orange", "no": 3, "name": {"zh-CN": "橙", "en-US": "Orange", "zh-Hant": "橙", "ja-JP": "オレンジ", "ko-KR": "주황색", "es-ES": "Naranja", "de-DE": "Orange", "fr-FR": "Orange", "it-IT": "Arancione", "pt-PT": "Laranja", "pl-PL": "Pomarańczowy", "ru-RU": "Оранжевый", "vi-VN": "Cam", "th-TH": "ส้ม", "ms-MY": "Oren", "ar": "برتقالي"}},
+  {"id": 3, "color": "Yellow", "no": 4, "name": {"zh-CN": "黄", "en-US": "Yellow", "zh-Hant": "黃", "ja-JP": "黄色", "ko-KR": "노랑색", "es-ES": "Amarillo", "de-DE": "Gelb", "fr-FR": "Jaune", "it-IT": "Giallo", "pt-PT": "Amarelo", "pl-PL": "Żółty", "ru-RU": "Жёлтый", "vi-VN": "Vàng", "th-TH": "เหลือง", "ms-MY": "Kuning", "ar": "أصفر"}},
+  {"id": 4, "color": "Green", "no": 5, "name": {"zh-CN": "绿", "en-US": "Green", "zh-Hant": "綠", "ja-JP": "緑", "ko-KR": "초록색", "es-ES": "Verde", "de-DE": "Grün", "fr-FR": "Vert", "it-IT": "Verde", "pt-PT": "Verde", "pl-PL": "Zielony", "ru-RU": "Зелёный", "vi-VN": "Xanh lá", "th-TH": "เขียว", "ms-MY": "Hijau", "ar": "أخضر"}},
+  {"id": 5, "color": "Cyan", "no": 6, "name": {"zh-CN": "青", "en-US": "Cyan", "zh-Hant": "青", "ja-JP": "シアン", "ko-KR": "청록색", "es-ES": "Cian", "de-DE": "Cyan", "fr-FR": "Cyan", "it-IT": "Ciano", "pt-PT": "Ciano", "pl-PL": "Cyjan", "ru-RU": "Голубой", "vi-VN": "Xanh ngọc", "th-TH": "ฟ้า", "ms-MY": "Siren", "ar": "سماوي"}},
+  {"id": 6, "color": "Blue", "no": 7, "name": {"zh-CN": "蓝", "en-US": "Blue", "zh-Hant": "藍", "ja-JP": "青", "ko-KR": "파랑색", "es-ES": "Azul", "de-DE": "Blau", "fr-FR": "Bleu", "it-IT": "Blu", "pt-PT": "Azul", "pl-PL": "Niebieski", "ru-RU": "Синий", "vi-VN": "Xanh dương", "th-TH": "น้ำเงิน", "ms-MY": "Biru", "ar": "أزرق"}},
+  {"id": 7, "color": "Purple", "no": 8, "name": {"zh-CN": "紫", "en-US": "Purple", "zh-Hant": "紫", "ja-JP": "紫", "ko-KR": "보라색", "es-ES": "Morado", "de-DE": "Violett", "fr-FR": "Violet", "it-IT": "Viola", "pt-PT": "Roxo", "pl-PL": "Fioletowy", "ru-RU": "Фиолетовый", "vi-VN": "Tím", "th-TH": "ม่วง", "ms-MY": "Ungu", "ar": "بنفسجي"}},
+  {"id": 8, "color": "Neutral", "no": 9, "name": {"zh-CN": "无彩", "en-US": "Neutral", "zh-Hant": "無彩", "ja-JP": "無彩色", "ko-KR": "무채색", "es-ES": "Neutro", "de-DE": "Neutral", "fr-FR": "Neutre", "it-IT": "Neutro", "pt-PT": "Neutro", "pl-PL": "Neutralny", "ru-RU": "Нейтральный", "vi-VN": "Trung tính", "th-TH": "สีเทา", "ms-MY": "Neutral", "ar": "محايد"}}
 ]

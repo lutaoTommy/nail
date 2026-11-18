@@ -307,3 +307,13 @@ func AppleAuthKeyPresent() bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
+
+/*获取配置*/
+func GetLanguage() string {
+	return localConfig.Language
+}
+
+/*设置配置*/
+func SetLanguage(language string) {
+	localConfig.Language = language
+}

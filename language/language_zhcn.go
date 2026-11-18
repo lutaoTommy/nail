@@ -123,4 +123,18 @@ func initLanguageZhcn() {
 	languageMapZhcn["E_INVALID_REVIEW_STATUS"] = "审核状态不合法"
 	languageMapZhcn["E_NO_TOPIC"] = "无此话题"
 	languageMapZhcn["E_TOPIC_EXIST"] = "话题已存在"
+	/*activity*/
+	languageMapZhcn["E_NO_ACTIVITY"] = "无此活动"
+	languageMapZhcn["E_NO_TITLE"] = "请填写标题"
+	languageMapZhcn["E_NO_TIME"] = "请填写时间"
+	languageMapZhcn["E_ALREADY_JOINED"] = "已参与此活动"
+	languageMapZhcn["E_NOT_JOINED"] = "未参与此活动"
+	languageMapZhcn["E_ALREADY_VOTED"] = "已投过票"
+	languageMapZhcn["E_NOT_VOTED"] = "未投过票"
+	/*color/voice*/
+	languageMapZhcn["E_AI_RECOMMEND_FAILED"] = "颜色推荐服务暂不可用，请稍后再试"
+	languageMapZhcn["E_NO_COLOR_NAME"] = "未识别到颜色名称"
+	languageMapZhcn["V_ACTION_HELP"] = "无法识别指令。请尝试：\n· 换颜色：第一个换成午夜蓝"
+	languageMapZhcn["E_CERT_EXPIRED"] = "验证码已过期，请重新获取"
+	registerLocale("zh-CN", languageMapZhcn)
 }

@@ -48,7 +48,6 @@ func ColorHandler(color iris.Party) {
 func descColorHandler(ctx iris.Context) {
 	var err error
 	var params Params
-	params.Name = ctx.URLParam("name")
 	params.Token = ctx.GetHeader("token")
 	if params.Token == "" {
 		err = newError(401, "E_NO_TOKEN")
@@ -57,7 +56,7 @@ func descColorHandler(ctx iris.Context) {
 		ctx.JSON(iris.Map{"result_code": getErrCode(err), "result_msg": ErrMsg(ctx, err)})
 		return
 	}
-	data, err := descColor(&params)
+	data, err := descColor(&params, LocaleFromCtx(ctx))
 	if err == nil {
 		ctx.JSON(iris.Map{"result_code": 200, "result_msg": "success", "total": params.Total, "data": data})
 	} else {
@@ -65,8 +64,8 @@ func descColorHandler(ctx iris.Context) {
 	}
 }
 
-/*查询色系*/
-func descColor(params *Params) ([]ColorDesc, error) {
+/*查询色系：name 按 locale 本地化（回退 en-US/zh-CN）*/
+func descColor(params *Params, locale string) ([]ColorDescOut, error) {
 	db := getMysqlConn()
 	var userInfo User
 	err := db.Where("token = ?", params.Token).First(&userInfo).Error
@@ -74,16 +73,45 @@ func descColor(params *Params) ([]ColorDesc, error) {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
 	db = db.Table("color_descs")
-	if params.Name != "" {
-		db = db.Where("name like ?", fmt.Sprintf("%%%s%%", params.Name))
-	}
 	err = db.Count(&params.Total).Error
 	if err != nil {
 		return nil, err
 	}
-	data := []ColorDesc{}
-	err = db.Order("no").Find(&data).Error
-	return data, err
+	var rows []ColorDesc
+	err = db.Order("no").Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make([]ColorDescOut, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, ColorDescOut{
+			Id:         r.Id,
+			No:         r.No,
+			Name:       localizeDescName(r.Name, locale),
+			Color:      r.Color,
+			CreateTime: r.CreateTime,
+		})
+	}
+	return out, nil
+}
+
+/*取本地化文案：locale -> en-US -> zh-CN -> 任意非空*/
+func localizeDescName(name map[string]string, locale string) string {
+	if v := name[locale]; v != "" {
+		return v
+	}
+	if v := name["en-US"]; v != "" {
+		return v
+	}
+	if v := name["zh-CN"]; v != "" {
+		return v
+	}
+	for _, v := range name {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 /*查询颜色*/
