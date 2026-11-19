@@ -172,7 +172,7 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
-	db = db.Select("follows.id, follows.following_id, follows.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
+	db = db.Select("follows.id, follows.following_id, follows.follow_time, users.nickname, users.avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
 		Table("follows").
 		Joins("left join users on follows.following_id = users.user_id").
 		Where("follows.status = ?", 1).
@@ -205,7 +205,6 @@ func userFollowList(params *Params) ([]FollowOut, error) {
 			data[i].IsFollowed = followedSet[data[i].FollowingID]
 		}
 	}
-	signFollowAvatars(data)
 	return data, nil
 }
 
@@ -239,7 +238,7 @@ func userFansList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
-	db = db.Select("follows.id, follows.follower_id as following_id, follows.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
+	db = db.Select("follows.id, follows.follower_id as following_id, follows.follow_time, users.nickname, users.avatar, users.biography, users.follow_count, users.fans_count, users.post_count").
 		Table("follows").
 		Joins("left join users on follows.follower_id = users.user_id").
 		Where("follows.status = ?", 1).
@@ -257,7 +256,6 @@ func userFansList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, err
 	}
-	signFollowAvatars(data)
 	return data, nil
 }
 
@@ -291,7 +289,7 @@ func userMutualFollowList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
-	db = db.Select("f1.id, f1.following_id, f1.follow_time, users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count, 1 as is_followed").
+	db = db.Select("f1.id, f1.following_id, f1.follow_time, users.nickname, users.avatar, users.biography, users.follow_count, users.fans_count, users.post_count, 1 as is_followed").
 		Table("follows f1").
 		Joins("inner join follows f2 on f1.follower_id = f2.following_id and f1.following_id = f2.follower_id").
 		Joins("left join users on f1.following_id = users.user_id").
@@ -311,18 +309,5 @@ func userMutualFollowList(params *Params) ([]FollowOut, error) {
 	if err != nil {
 		return nil, err
 	}
-	signFollowAvatars(data)
 	return data, nil
-}
-
-/*转换关注列表头像为可访问的签名地址*/
-func signFollowAvatars(data []FollowOut) {
-	for i := range data {
-		if data[i].Avatar == "" {
-			continue
-		}
-		if u, err := signAvatarURL(data[i].Avatar); err == nil {
-			data[i].Avatar = u
-		}
-	}
 }

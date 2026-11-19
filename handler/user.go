@@ -610,19 +610,13 @@ func getUserInfoHandler(ctx iris.Context) {
 	}
 	err = getUserInfo(&user)
 	if err == nil {
-		avatarURL := ""
-		if user.AvatarObjectKey != "" {
-			if u, e := signAvatarURL(user.AvatarObjectKey); e == nil {
-				avatarURL = u
-			}
-		}
 		ctx.JSON(iris.Map{
 			"result_code":  200,
 			"result_msg":   "success",
 			"phone":        user.Phone,
 			"email":        user.Email,
 			"user_id":      user.UserId,
-			"avatar":       avatarURL,
+			"avatar":       user.Avatar,
 			"nickname":     user.Nickname,
 			"language":     user.Language,
 			"biography":    user.Biography,

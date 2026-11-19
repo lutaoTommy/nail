@@ -447,7 +447,7 @@ func listCirclePost(params *Params) ([]CirclePostOut, error) {
 		return nil, newError(401, "E_NO_TOKEN")
 	}
 	db = db.Table("circle_posts")
-	db = db.Select("users.nickname, users.avatar_object_key as avatar, users.biography, users.follow_count, users.fans_count, users.post_count, "+
+	db = db.Select("users.nickname, users.avatar, users.biography, users.follow_count, users.fans_count, users.post_count, "+
 		"circle_posts.id, circle_posts.user_id, circle_posts.content, circle_posts.topic, circle_posts.create_time, circle_posts.like_count, "+
 		"circle_posts.collect_count, circle_posts.comment_count, circle_posts.review_status, circle_posts.review_time, circle_posts.reviewer, "+
 		"CASE WHEN EXISTS (SELECT 1 FROM follows WHERE follows.follower_id = ? AND follows.following_id = circle_posts.user_id AND follows.status = 1) THEN 1 ELSE 0 END as is_followed", userInfo.UserId)
@@ -475,31 +475,7 @@ func listCirclePost(params *Params) ([]CirclePostOut, error) {
 	err = db.Preload("Images").Preload("Likes").Preload("Likes.User").
 		Preload("Comments").Preload("Comments.User").
 		Order("create_time desc").Find(&data).Error
-	if err != nil {
-		return nil, err
-	}
-	for i := range data {
-		if data[i].Avatar != "" {
-			if u, err := signAvatarURL(data[i].Avatar); err == nil {
-				data[i].Avatar = u
-			}
-		}
-		for j := range data[i].Likes {
-			if data[i].Likes[j].User.Avatar != "" {
-				if u, err := signAvatarURL(data[i].Likes[j].User.Avatar); err == nil {
-					data[i].Likes[j].User.Avatar = u
-				}
-			}
-		}
-		for j := range data[i].Comments {
-			if data[i].Comments[j].User.Avatar != "" {
-				if u, err := signAvatarURL(data[i].Comments[j].User.Avatar); err == nil {
-					data[i].Comments[j].User.Avatar = u
-				}
-			}
-		}
-	}
-	return data, nil
+	return data, err
 }
 
 /*删除动态*/
